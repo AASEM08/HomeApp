@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تطبيق البيت</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            appBg: '#F8F9F6',
+            appDark: '#2C3333',
+            olive: {
+              DEFAULT: '#4A5D23',
+              dark: '#3d4d1d',
+              light: '#657e32',
+              soft: '#eff3ea'
+            },
+            navy: {
+              DEFAULT: '#1C2841',
+              dark: '#141d30',
+              soft: '#e9ecf2'
+            }
+          },
+          fontFamily: {
+            thmanyah: ["'Thmanyah Serif Display'", 'serif'],
+            tajawal: ["'Thmanyah Serif Display'", 'serif'],
+            sans: ["'Thmanyah Serif Display'", 'serif'],
+            serif: ["'Thmanyah Serif Display'", 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ========================================================
+       CUSTOM LOCAL FONT DEFINITIONS: Thmanyah Serif Display
+       ======================================================== */
+    @font-face {
+      font-family: 'Thmanyah Serif Display';
+      src: url('./thmanyahserifdisplay-Light.woff2') format('woff2');
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Thmanyah Serif Display';
+      src: url('./thmanyahserifdisplay-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Thmanyah Serif Display';
+      src: url('./thmanyahserifdisplay-Medium.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Thmanyah Serif Display';
+      src: url('./thmanyahserifdisplay-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Thmanyah Serif Display';
+      src: url('./thmanyahserifdisplay-Black.woff2') format('woff2');
+      font-weight: 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Enforce Thmanyah Serif Display Globally (No Sans-Serif) */
+    *, *::before, *::after, html, body, input, select, textarea, button {
+      font-family: 'Thmanyah Serif Display', serif !important;
+    }
+
+    body {
+      background-color: #e2e8f0;
+      color: #2C3333;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234A5D23' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: left 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.25em 1.25em;
+      padding-left: 2rem;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+  </style>
+</head>
+
+<body class="flex justify-center items-center min-h-screen p-0 sm:p-4">
+
+  <!-- Mobile Device Shell (Max-Width 400px) -->
+  <div class="w-full max-w-[400px] h-[100dvh] sm:h-[844px] bg-appBg text-appDark flex flex-col justify-between relative sm:rounded-[36px] shadow-2xl overflow-hidden border border-gray-200/70">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white/95 backdrop-blur-md px-5 pt-4 pb-3 border-b border-gray-100 flex-shrink-0 z-10">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-navy text-white flex items-center justify-center font-bold shadow-md shadow-navy/20">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-black text-navy leading-none">تطبيق البيت</h1>
+            <span class="text-xs text-gray-400 font-medium" id="headerDate">الخميس، ٢٤ سبتمبر</span>
+          </div>
+        </div>
+
+        <button onclick="switchTab('settings')" title="الإعدادات" class="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area (Scrollable) -->
+    <main class="flex-1 overflow-y-auto no-scrollbar px-4 py-3.5 pb-24">
+
+      <!-- ================= 1. TAB: HOME (الرئيسية) ================= -->
+      <section id="tab-home" class="space-y-5">
+        
+        <!-- Overdue Tasks Section -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5 px-0.5">
+            <div class="flex items-center gap-1.5">
+              <span class="flex h-2.5 w-2.5 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-600"></span>
+              </span>
+              <h2 class="text-sm font-extrabold text-rose-700 tracking-wider">المهام المتأخرة</h2>
+            </div>
+            <span class="text-xs font-extrabold bg-rose-100/80 text-rose-800 px-2 py-0.5 rounded-full" id="overdueCount">٢ مهام</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5" id="overdueTasksContainer">
+            <!-- Populated via JS: خضار, نواشف -->
+          </div>
+        </div>
+
+        <!-- Today's Tasks Section -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5 px-0.5">
+            <div class="flex items-center gap-1.5">
+              <span class="h-2.5 w-2.5 rounded-full bg-olive"></span>
+              <h2 class="text-sm font-extrabold text-olive tracking-wider">مهام اليوم</h2>
+            </div>
+            <span class="text-xs font-extrabold bg-olive-soft text-olive px-2 py-0.5 rounded-full" id="todayCount">٤ مهام</span>
+          </div>
+
+          <div class="space-y-2.5" id="todayTasksContainer">
+            <!-- Populated via JS: الماء, البروتينات, المقاضي الشهرية, المنظفات -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= 2. TAB: SMART INVOICE SCANNER (المحاسب الذكي) ================= -->
+      <section id="tab-bills" class="hidden space-y-4">
+        
+        <div class="px-0.5">
+          <div class="flex items-center gap-2">
+            <h2 class="text-lg font-black text-navy leading-none">المحاسب الذكي للفواتير</h2>
+            <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold">ذكاء اصطناعي</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">التقط صورة فاتورة المقاضي أو ارفعها لاستخراج وقراءة الأصناف تلقائياً</p>
+        </div>
+
+        <!-- Hidden Native File Inputs -->
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleInvoiceUpload(event)">
+        <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleInvoiceUpload(event)">
+
+        <!-- Action Upload Buttons -->
+        <div class="grid grid-cols-2 gap-3">
+          
+          <!-- Take Photo Button -->
+          <button onclick="document.getElementById('cameraInput').click()" 
+                  class="flex flex-col items-center justify-center p-4 rounded-2xl bg-olive hover:bg-olive-dark text-white shadow-md shadow-olive/20 transition active:scale-[0.98] border border-olive/30 group">
+            <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center mb-2.5 group-hover:scale-110 transition">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-black">تصوير الفاتورة</span>
+            <span class="text-xs text-white/80 mt-0.5">كاميرا الهاتف المباشرة</span>
+          </button>
+
+          <!-- Upload From Gallery Button -->
+          <button onclick="document.getElementById('galleryInput').click()" 
+                  class="flex flex-col items-center justify-center p-4 rounded-2xl bg-navy hover:bg-navy-dark text-white shadow-md shadow-navy/20 transition active:scale-[0.98] border border-navy/30 group">
+            <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center mb-2.5 group-hover:scale-110 transition">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-black">اختيار من الاستديو</span>
+            <span class="text-xs text-white/80 mt-0.5">من ألبوم الصور</span>
+          </button>
+
+        </div>
+
+        <!-- Clean Scan Placeholder Area -->
+        <div id="invoicePlaceholderArea" class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center min-h-[260px] transition-all">
+          <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 mb-3 border border-gray-100">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-bold text-gray-400 max-w-[220px] leading-relaxed">
+            سيتم تحليل الفاتورة وعرض المنتجات هنا...
+          </p>
+          <span class="text-xs text-gray-400 mt-2 bg-gray-50 px-2.5 py-1 rounded-full">يدعم فواتير السوبرماركت والمقاضي</span>
+        </div>
+
+      </section>
+
+      <!-- ================= 3. TAB: COMPARE (مقارنة) ================= -->
+      <section id="tab-compare" class="hidden space-y-4">
+        <div>
+          <h2 class="text-lg font-black text-navy leading-none">مقارنة أسعار الأصناف الأساسية</h2>
+          <p class="text-xs text-gray-500 mt-1">مقارنة حية لأوفر المتاجر لتوفير ميزانية البيت</p>
+        </div>
+
+        <div class="space-y-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-sm text-appDark">كرتون ماء (٤٠ × ٣٣٠ مل)</span>
+              <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">مياه شرب</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                <span class="block text-xs text-gray-400">صيدلية النهدي</span>
+                <span class="font-extrabold text-navy">١٩.٥٠ ر.س</span>
+              </div>
+              <div class="bg-olive-soft/50 p-2.5 rounded-xl border border-olive/20">
+                <span class="block text-xs text-olive font-bold">أسواق بنده (الأوفر)</span>
+                <span class="font-extrabold text-olive">١٧.٢٥ ر.س</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-sm text-appDark">دجاج طازج رضوى (١٠٠٠ جم)</span>
+              <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">دواجن</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="bg-olive-soft/50 p-2.5 rounded-xl border border-olive/20">
+                <span class="block text-xs text-olive font-bold">متجر رضوى المباشر</span>
+                <span class="font-extrabold text-olive">١٩.٩٥ ر.س</span>
+              </div>
+              <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                <span class="block text-xs text-gray-400">التطبيقات العامة</span>
+                <span class="font-extrabold text-navy">٢٢.٠٠ ر.س</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-sm text-appDark">صابون تايد مركز (٥ كجم)</span>
+              <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">منظفات</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="bg-olive-soft/50 p-2.5 rounded-xl border border-olive/20">
+                <span class="block text-xs text-olive font-bold">محل البلاستيكات والجملة</span>
+                <span class="font-extrabold text-olive">٤٩.٠٠ ر.س</span>
+              </div>
+              <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                <span class="block text-xs text-gray-400">المتاجر الكبرى</span>
+                <span class="font-extrabold text-navy">٦٢.٥٠ ر.س</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 4. TAB: SETTINGS (الإعدادات) ================= -->
+      <section id="tab-settings" class="hidden space-y-4">
+        <div>
+          <h2 class="text-lg font-black text-navy leading-none">إعدادات التطبيق</h2>
+          <p class="text-xs text-gray-500 mt-1">تعديل جدول تكرار المهام وروابط المتاجر الخارجية</p>
+        </div>
+
+        <!-- 1. Interactive Schedule Management (All Dropdowns) -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+          <div class="flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <svg class="w-4 h-4 text-olive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <h3 class="text-sm font-black text-navy">جدول تكرار المهام (مواعيد الظهور)</h3>
+          </div>
+
+          <div class="space-y-2.5">
+            <!-- Schedule: خضار -->
+            <div class="flex items-center justify-between text-sm gap-2">
+              <span class="font-bold text-appDark w-28 flex-shrink-0">خضار</span>
+              <select id="schedule-vegetables" onchange="updateTaskSchedule('vegetables', this.value)" class="schedule-dropdown flex-1 text-sm py-1.5 px-2 rounded-xl border border-gray-200 bg-gray-50 font-bold text-olive focus:outline-none focus:border-navy"></select>
+            </div>
+
+            <!-- Schedule: نواشف -->
+            <div class="flex items-center justify-between text-sm gap-2">
+              <span class="font-bold text-appDark w-28 flex-shrink-0">نواشف</span>
+              <select id="schedule-drygoods" onchange="updateTaskSchedule('drygoods', this.value)" class="schedule-dropdown flex-1 text-sm py-1.5 px-2 rounded-xl border border-gray-200 bg-gray-50 font-bold text-olive focus:outline-none focus:border-navy"></select>
+            </div>
+
+            <!-- Schedule: الماء -->
+            <div class="flex items-center justify-between text-sm gap-2">
+              <span class="font-bold text-appDark w-28 flex-shrink-0">الماء</span>
+              <select id="schedule-water" onchange="updateTaskSchedule('water', this.value)" class="schedule-dropdown flex-1 text-sm py-1.5 px-2 rounded-xl border border-gray-200 bg-gray-50 font-bold text-olive focus:outline-none focus:border-navy"></select>
+            </div>
+
+            <!-- Schedule: البروتينات -->
+            <div class="flex items-center justify-between text-sm gap-2">
+              <span class="font-bold text-appDark w-28 flex-shrink-0">البروتينات</span>
+              <select id="schedule-proteins" onchange="updateTaskSchedule('proteins', this.value)" class="schedule-dropdown flex-1 text-sm py-1.5 px-2 rounded-xl border border-gray-200 bg-gray-50 font-bold text-olive focus:outline-none focus:border-navy"></select>
+            </div>
+
+            <!-- Schedule: المقاضي الشهرية -->
+            <div class="flex items-center justify-between text-sm gap-2">
+              <span class="font-bold text-appDark w-28 flex-shrink-0">المقاضي الشهرية</span>
+              <select id="schedule-monthly" onchange="updateTaskSchedule('monthly', this.value)" class="schedule-dropdown flex-1 text-sm py-1.5 px-2 rounded-xl border border-gray-200 bg-gray-50 font-bold text-olive focus:outline-none focus:border-navy"></select>
+            </div>
+
+            <!-- Schedule: المنظفات -->
+            <div class="flex items-center justify-between text-sm gap-2">
+              <span class="font-bold text-appDark w-28 flex-shrink-0">المنظفات</span>
+              <select id="schedule-cleaning" onchange="updateTaskSchedule('cleaning', this.value)" class="schedule-dropdown flex-1 text-sm py-1.5 px-2 rounded-xl border border-gray-200 bg-gray-50 font-bold text-olive focus:outline-none focus:border-navy"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Comprehensive External Vendor Link Inputs (All 10 Vendors) -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+          <div class="flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <svg class="w-4 h-4 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+            <h3 class="text-sm font-black text-navy">روابط المتاجر الخارجية (١٠ متاجر)</h3>
+          </div>
+
+          <div class="space-y-2.5">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">١. دجاج رضوى</label>
+              <input type="url" id="link-radwa" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٢. الأسماك</label>
+              <input type="url" id="link-asmak" placeholder="https://..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٣. صيدلية النهدي</label>
+              <input type="url" id="link-nahdi" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٤. بنده</label>
+              <input type="url" id="link-panda" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٥. الشربتلي</label>
+              <input type="url" id="link-sharbatly" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٦. يجبى</label>
+              <input type="url" id="link-ujba" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٧. متجر كيو</label>
+              <input type="url" id="link-q_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٨. أمازون</label>
+              <input type="url" id="link-amazon" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">٩. متجر الحي</label>
+              <input type="url" id="link-neighborhood_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-0.5">١٠. محل البلاستيكات</label>
+              <input type="url" id="link-plastics_shop" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            </div>
+
+            <button onclick="saveAllVendorLinks()" class="w-full mt-2 py-3 rounded-xl bg-navy hover:bg-navy-dark text-white font-black text-sm shadow-md shadow-navy/20 transition active:scale-[0.98]">
+              حفظ جميع الروابط
+            </button>
+          </div>
+        </div>
+
+        <!-- Reset Button -->
+        <button onclick="resetDefaults()" class="w-full py-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-sm transition">
+          إعادة تعيين البيانات للوضع الافتراضي
+        </button>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (4 Tabs) -->
+    <nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 px-3 py-2 flex justify-around items-center z-20">
+      
+      <!-- Tab 1: Home -->
+      <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center gap-0.5 transition-all text-navy">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span class="text-xs font-extrabold tracking-tight">الرئيسية</span>
+      </button>
+
+      <!-- Tab 2: Smart Invoice Scanner -->
+      <button onclick="switchTab('bills')" id="nav-bills" class="nav-btn flex flex-col items-center gap-0.5 transition-all text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"/>
+        </svg>
+        <span class="text-xs font-medium tracking-tight">المحاسب الذكي</span>
+      </button>
+
+      <!-- Tab 3: Compare -->
+      <button onclick="switchTab('compare')" id="nav-compare" class="nav-btn flex flex-col items-center gap-0.5 transition-all text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+        </svg>
+        <span class="text-xs font-medium tracking-tight">مقارنة</span>
+      </button>
+
+      <!-- Tab 4: Settings -->
+      <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center gap-0.5 transition-all text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span class="text-xs font-medium tracking-tight">الإعدادات</span>
+      </button>
+
+    </nav>
+
+    <!-- ================= DYNAMIC TASK MODAL ================= -->
+    <div id="taskModal" class="hidden absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex flex-col justify-end">
+      
+      <!-- Backdrop Click to Dismiss -->
+      <div class="flex-1" onclick="closeTaskModal()"></div>
+
+      <!-- Modal Bottom Sheet Sheet Body -->
+      <div class="bg-white rounded-t-[32px] p-5 max-h-[88%] flex flex-col shadow-2xl animate-slide-up border-t border-gray-100">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-start pb-3 border-b border-gray-100 flex-shrink-0">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="modalTaskTitle" class="text-lg font-black text-navy leading-none">مهمة</h3>
+              <span id="modalTaskBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-olive-soft text-olive">الجدول</span>
+            </div>
+            <p id="modalTaskSubtitle" class="text-sm text-gray-400 mt-1">قائمة الأصناف والإجراءات المطلوبة</p>
+          </div>
+
+          <button onclick="closeTaskModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Checklist Bar: Count + High-Visibility "+" Button Trigger -->
+        <div class="flex justify-between items-center mt-3 mb-2 flex-shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-black text-navy">قائمة الأصناف</span>
+            <span id="modalProgressText" class="text-xs font-bold text-olive bg-olive-soft px-2 py-0.5 rounded-full">٠ من ٠ منجز</span>
+          </div>
+
+          <!-- Prominent Top "+" Icon Button -->
+          <button onclick="promptQuickAddItem()" title="إضافة غرض جديد" 
+                  class="flex items-center gap-1 text-xs font-black text-olive hover:text-olive-dark bg-olive-soft px-2.5 py-1 rounded-xl transition active:scale-95 shadow-sm">
+            <svg class="w-3.5 h-3.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>إضافة غرض</span>
+          </button>
+        </div>
+
+        <!-- Checklist Items List (Scrollable) -->
+        <div id="modalChecklistItems" class="space-y-2 overflow-y-auto no-scrollbar max-h-52 py-1 flex-1">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Always-Visible Inline Add Item Row with Large "+" Button -->
+        <div class="mt-3 pt-2.5 border-t border-gray-100 flex-shrink-0 flex items-center gap-2">
+          <input type="text" id="newItemInput" placeholder="أدخل اسم الغرض المراد إضافته..." 
+                 class="flex-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-navy focus:bg-white transition"
+                 onkeydown="if(event.key === 'Enter') handleAddItem()">
+          
+          <button onclick="handleAddItem()" title="إضافة إلى القائمة" 
+                  class="w-10 h-10 rounded-xl bg-olive hover:bg-olive-dark text-white flex items-center justify-center transition active:scale-90 shadow-md shadow-olive/20 flex-shrink-0">
+            <svg class="w-5 h-5 stroke-[2.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Action Buttons Area (Dynamically wired to localStorage URLs) -->
+        <div id="modalActionButtons" class="mt-3 pt-2.5 border-t border-gray-100 flex-shrink-0">
+          <!-- Rendered dynamically -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Alert / Success Toast -->
+    <div id="toast" class="hidden absolute top-4 inset-x-4 bg-navy text-white text-sm font-black py-2.5 px-4 rounded-2xl shadow-xl z-50 text-center transition-all duration-300">
+      تم الحفظ بنجاح
+    </div>
+
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    /* ========================================================
+       SCHEDULE OPTIONS & VENDOR DATA SPECIFICATION
+       ======================================================== */
+    const SCHEDULE_OPTIONS = [
+      "يومياً",
+      "كل سبت",
+      "كل ثلاثاء",
+      "يوم ١ من الشهر",
+      "كل أسبوعين",
+      "نهاية كل شهر",
+      "شهرياً (عند الحاجة)"
+    ];
+
+    const STORAGE_KEY = 'tatbiq_albayt_state_v2';
+
+    // Master Default Data
+    const defaultState = {
+      // 10 External Vendors:
+      links: {
+        radwa: "https://saudiradwa.com/ar/checkout/cart",
+        asmak: "https://smmkha.com/ar/cart",
+        nahdi: "https://www.nahdionline.com/ar-sa/my-cart",
+        panda: "https://panda.sa/ar/cart",
+        sharbatly: "https://www.sharbatly.club/checkouts/cn/hWNHAJWsasECNcefUAek5Ux9/ar-sa?_r=AQABPiVwjUDvnz0U1eVwuEdec19oMp2F5O-IkcE-cutc9kI",
+        ujba: "https://ujba-sa.com/cart",
+        q_store: "",
+        amazon: "",
+        neighborhood_store: "",
+        plastics_shop: ""
+      },
+      tasks: {
+        vegetables: {
+          id: 'vegetables',
+          title: 'خضار',
+          subtitle: 'طماطم، خيار، بصل وبطاطس',
+          category: 'overdue',
+          schedule: 'كل سبت',
+          items: [
+            { id: 'v1', text: 'الطماطم', checked: false },
+            { id: 'v2', text: 'الخيار', checked: false },
+            { id: 'v3', text: 'بصل وبطاطس', checked: false }
+          ],
+          actions: [
+            { label: 'الطلب من الشربتلي', vendorKey: 'sharbatly', theme: 'olive' },
+            { label: 'الطلب من يجبى', vendorKey: 'ujba', theme: 'navy' }
+          ]
+        },
+        drygoods: {
+          id: 'drygoods',
+          title: 'نواشف',
+          subtitle: 'زيتون، جبنة، خبز',
+          category: 'overdue',
+          schedule: 'كل ثلاثاء',
+          items: [
+            { id: 'd1', text: 'زيتون', checked: false },
+            { id: 'd2', text: 'جبنة', checked: false },
+            { id: 'd3', text: 'خبز', checked: false }
+          ],
+          completed: false,
+          actions: [
+            { type: 'mark_done', label: 'تم الشراء' }
+          ]
+        },
+        water: {
+          id: 'water',
+          title: 'الماء',
+          subtitle: '١٥ كرتون ماء، دبات',
+          category: 'today',
+          schedule: 'يوم ١ من الشهر',
+          items: [
+            { id: 'w1', text: '١٥ كرتون ماء', checked: false },
+            { id: 'w2', text: 'تعبئة دبات الماء', checked: false }
+          ],
+          actions: [
+            { label: 'الطلب من النهدي', vendorKey: 'nahdi', theme: 'olive' },
+            { label: 'الطلب من بنده', vendorKey: 'panda', theme: 'navy' }
+          ]
+        },
+        proteins: {
+          id: 'proteins',
+          title: 'البروتينات',
+          subtitle: 'دجاج رضوى، الأسماك، لحمة',
+          category: 'today',
+          schedule: 'كل أسبوعين',
+          items: [
+            { id: 'p1', text: 'دجاج رضوى', checked: false },
+            { id: 'p2', text: 'الأسماك', checked: false },
+            { id: 'p3', text: 'لحمة أوصال الزهراني', checked: false }
+          ],
+          actions: [
+            { label: 'رضوى', vendorKey: 'radwa', theme: 'olive' },
+            { label: 'الأسماك', vendorKey: 'asmak', theme: 'navy' }
+          ]
+        },
+        monthly: {
+          id: 'monthly',
+          title: 'المقاضي الشهرية',
+          subtitle: 'مقاضي عامة للبيت',
+          category: 'today',
+          schedule: 'نهاية كل شهر',
+          items: [
+            { id: 'm1', text: 'مقاضي عامة', checked: false }
+          ],
+          actions: [
+            { label: 'كيو', vendorKey: 'q_store', theme: 'navy' },
+            { label: 'أمازون', vendorKey: 'amazon', theme: 'navy' },
+            { label: 'متجر الحي', vendorKey: 'neighborhood_store', theme: 'olive' }
+          ]
+        },
+        cleaning: {
+          id: 'cleaning',
+          title: 'المنظفات',
+          subtitle: 'تايد، كلوركس',
+          category: 'today',
+          schedule: 'شهرياً (عند الحاجة)',
+          items: [
+            { id: 'c1', text: 'تايد', checked: false },
+            { id: 'c2', text: 'كلوركس', checked: false }
+          ],
+          actions: [
+            { label: 'محل البلاستيكات', vendorKey: 'plastics_shop', theme: 'olive' },
+            { label: 'أمازون', vendorKey: 'amazon', theme: 'navy' }
+          ]
+        }
+      }
+    };
+
+    let appData = {};
+    let activeTaskId = null;
+
+    // Load from LocalStorage
+    function loadAppState() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          appData = JSON.parse(stored);
+          // Fallbacks for any missing properties
+          if (!appData.links) appData.links = { ...defaultState.links };
+          if (!appData.tasks) appData.tasks = { ...defaultState.tasks };
+          
+          // Ensure all default vendor keys exist
+          Object.keys(defaultState.links).forEach(key => {
+            if (appData.links[key] === undefined) {
+              appData.links[key] = defaultState.links[key];
+            }
+          });
+        } else {
+          appData = JSON.parse(JSON.stringify(defaultState));
+          saveAppState();
+        }
+      } catch (err) {
+        console.error('Error loading app state:', err);
+        appData = JSON.parse(JSON.stringify(defaultState));
+      }
+    }
+
+    // Save to LocalStorage
+    function saveAppState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      } catch (err) {
+        console.error('Error saving app state:', err);
+      }
+    }
+
+    /* ========================================================
+       RENDER HOME TASKS
+       ======================================================== */
+    function renderHomeCards() {
+      const overdueContainer = document.getElementById('overdueTasksContainer');
+      const todayContainer = document.getElementById('todayTasksContainer');
+
+      overdueContainer.innerHTML = '';
+      todayContainer.innerHTML = '';
+
+      let overdueCount = 0;
+      let todayCount = 0;
+
+      Object.values(appData.tasks).forEach(task => {
+        const totalItems = task.items.length;
+        const checkedItems = task.items.filter(i => i.checked).length;
+        const isComplete = (totalItems > 0 && checkedItems === totalItems) || task.completed;
+
+        if (task.category === 'overdue') {
+          overdueCount++;
+          const card = document.createElement('div');
+          card.className = `p-3 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.98] ${
+            isComplete 
+              ? 'bg-white/70 border-gray-200 opacity-60' 
+              : 'bg-white border-rose-100 shadow-sm hover:border-rose-200'
+          }`;
+          card.onclick = () => openTaskModal(task.id);
+
+          card.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-extrabold px-2 py-0.5 rounded-full ${
+                isComplete ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'
+              }">
+                ${isComplete ? 'مكتمل ✓' : (task.schedule || 'مجدول')}
+              </span>
+              <span class="text-xs font-extrabold ${isComplete ? 'text-emerald-700' : 'text-gray-400'}">
+                ${checkedItems}/${totalItems}
+              </span>
+            </div>
+            <h3 class="font-extrabold text-sm text-appDark leading-snug">${task.title}</h3>
+            <p class="text-xs text-gray-400 truncate mt-0.5">${task.subtitle}</p>
+          `;
+          overdueContainer.appendChild(card);
+
+        } else {
+          todayCount++;
+          const card = document.createElement('div');
+          card.className = `p-3.5 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.99] flex items-center justify-between ${
+            isComplete 
+              ? 'bg-white/70 border-gray-200 opacity-60' 
+              : 'bg-white border-gray-100 shadow-sm hover:border-olive/30'
+          }`;
+          card.onclick = () => openTaskModal(task.id);
+
+          card.innerHTML = `
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${
+                isComplete ? 'bg-emerald-50 text-emerald-700' : 'bg-olive-soft text-olive'
+              }">
+                ${isComplete ? '✓' : checkedItems + '/' + totalItems}
+              </div>
+              <div>
+                <h3 class="font-bold text-sm text-appDark">${task.title}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">${task.subtitle}</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
+                ${task.schedule || 'اليوم'}
+              </span>
+              <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </div>
+          `;
+          todayContainer.appendChild(card);
+        }
+      });
+
+      document.getElementById('overdueCount').textContent = `${overdueCount} مهام`;
+      document.getElementById('todayCount').textContent = `${todayCount} مهام`;
+    }
+
+    /* ========================================================
+       MODAL CHECKLIST & DYNAMIC ACTIONS
+       ======================================================== */
+    function openTaskModal(taskId) {
+      activeTaskId = taskId;
+      const task = appData.tasks[taskId];
+      if (!task) return;
+
+      document.getElementById('modalTaskTitle').textContent = task.title;
+      document.getElementById('modalTaskSubtitle').textContent = task.subtitle;
+      document.getElementById('modalTaskBadge').textContent = task.schedule || '';
+
+      renderModalChecklist();
+      renderModalActionButtons(task);
+
+      document.getElementById('newItemInput').value = '';
+      document.getElementById('taskModal').classList.remove('hidden');
+    }
+
+    function closeTaskModal() {
+      document.getElementById('taskModal').classList.add('hidden');
+      activeTaskId = null;
+      renderHomeCards();
+    }
+
+    function renderModalChecklist() {
+      const task = appData.tasks[activeTaskId];
+      if (!task) return;
+
+      const container = document.getElementById('modalChecklistItems');
+      container.innerHTML = '';
+
+      let checkedCount = 0;
+
+      task.items.forEach(item => {
+        if (item.checked) checkedCount++;
+
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-gray-50/90 hover:bg-gray-100 border border-gray-100 transition-all';
+
+        row.innerHTML = `
+          <label class="flex items-center gap-3 cursor-pointer flex-1">
+            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItemCheck('${item.id}')"
+                   class="w-4 h-4 text-olive bg-white border-gray-300 rounded focus:ring-olive cursor-pointer accent-[#4A5D23]">
+            <span class="text-sm font-medium transition-all ${item.checked ? 'line-through opacity-50 text-gray-400' : 'text-appDark font-bold'}">
+              ${escapeHtml(item.text)}
+            </span>
+          </label>
+          <button onclick="deleteItem('${item.id}')" class="text-gray-300 hover:text-rose-500 p-1 transition" title="حذف">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+
+      document.getElementById('modalProgressText').textContent = `${checkedCount} من ${task.items.length} منجز`;
+    }
+
+    function toggleItemCheck(itemId) {
+      const task = appData.tasks[activeTaskId];
+      if (!task) return;
+
+      const item = task.items.find(i => i.id === itemId);
+      if (item) {
+        item.checked = !item.checked;
+        saveAppState();
+        renderModalChecklist();
+      }
+    }
+
+    // Top (+) Button Prompt
+    function promptQuickAddItem() {
+      const val = prompt('أدخل اسم الغرض المراد إضافته إلى القائمة:');
+      if (val && val.trim()) {
+        addNewItemText(val.trim());
+      }
+    }
+
+    // Bottom Inline Add Trigger
+    function handleAddItem() {
+      const input = document.getElementById('newItemInput');
+      const val = input.value.trim();
+      if (!val) return;
+      addNewItemText(val);
+      input.value = '';
+    }
+
+    function addNewItemText(text) {
+      if (!activeTaskId) return;
+      const task = appData.tasks[activeTaskId];
+      task.items.push({
+        id: 'item_' + Date.now(),
+        text: text,
+        checked: false
+      });
+      saveAppState();
+      renderModalChecklist();
+      showToast('تمت إضافة ' + text);
+    }
+
+    function deleteItem(itemId) {
+      const task = appData.tasks[activeTaskId];
+      if (!task) return;
+
+      task.items = task.items.filter(i => i.id !== itemId);
+      saveAppState();
+      renderModalChecklist();
+    }
+
+    // Dynamic Action Buttons configured through localStorage URLs
+    function renderModalActionButtons(task) {
+      const container = document.getElementById('modalActionButtons');
+      container.innerHTML = '';
+
+      if (task.id === 'drygoods') {
+        // "نواشف": "تم الشراء" Button
+        const btn = document.createElement('button');
+        btn.className = `w-full py-3 rounded-xl font-black text-sm transition active:scale-[0.98] ${
+          task.completed 
+            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' 
+            : 'bg-navy hover:bg-navy-dark text-white shadow-md shadow-navy/20'
+        }`;
+        btn.innerHTML = task.completed ? '✓ تم الشراء بنجاح' : 'تم الشراء';
+        btn.onclick = () => {
+          task.completed = !task.completed;
+          saveAppState();
+          renderModalActionButtons(task);
+          showToast(task.completed ? 'تم تعليم النواشف كمكتملة' : 'تم إلغاء اكتمال النواشف');
+        };
+        container.appendChild(btn);
+
+      } else if (task.actions) {
+        // Multi-Vendor Buttons
+        const colClass = task.actions.length === 3 ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-2 gap-2.5';
+        const grid = document.createElement('div');
+        grid.className = colClass;
+
+        task.actions.forEach(action => {
+          const btn = document.createElement('button');
+          const bgTheme = action.theme === 'olive' 
+            ? 'bg-olive hover:bg-olive-dark shadow-olive/20' 
+            : 'bg-navy hover:bg-navy-dark shadow-navy/20';
+
+          btn.className = `flex items-center justify-center gap-1 py-2.5 px-2 rounded-xl ${bgTheme} text-white font-black text-xs shadow-sm transition active:scale-95 text-center`;
+          btn.innerHTML = `
+            <span class="truncate">${action.label}</span>
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          `;
+
+          // Handle click: Read dynamic URL from localStorage
+          btn.onclick = () => {
+            const destUrl = (appData.links && appData.links[action.vendorKey]) ? appData.links[action.vendorKey].trim() : '';
+            if (destUrl && destUrl !== '#' && destUrl.length > 3) {
+              window.open(destUrl, '_blank', 'noopener,noreferrer');
+            } else {
+              showToast(`لم يتم حفظ رابط متجر (${action.label}) في الإعدادات بعد`);
+            }
+          };
+
+          grid.appendChild(btn);
+        });
+
+        container.appendChild(grid);
+      }
+    }
+
+    /* ========================================================
+       SETTINGS: SCHEDULES & VENDOR LINKS
+       ======================================================== */
+    // Initialize Schedule Dropdowns with Options
+    function initScheduleDropdowns() {
+      const taskKeys = ['vegetables', 'drygoods', 'water', 'proteins', 'monthly', 'cleaning'];
+
+      taskKeys.forEach(taskId => {
+        const select = document.getElementById(`schedule-${taskId}`);
+        if (!select) return;
+
+        select.innerHTML = '';
+        const currentSchedule = appData.tasks[taskId]?.schedule || SCHEDULE_OPTIONS[0];
+
+        SCHEDULE_OPTIONS.forEach(opt => {
+          const optionEl = document.createElement('option');
+          optionEl.value = opt;
+          optionEl.textContent = opt;
+          if (opt === currentSchedule) {
+            optionEl.selected = true;
+          }
+          select.appendChild(optionEl);
+        });
+      });
+    }
+
+    // Update Task Schedule from Dropdown
+    function updateTaskSchedule(taskId, newSchedule) {
+      if (appData.tasks[taskId]) {
+        appData.tasks[taskId].schedule = newSchedule;
+        saveAppState();
+        renderHomeCards();
+        showToast(`تم تحديث جدول (${appData.tasks[taskId].title}) إلى: ${newSchedule}`);
+      }
+    }
+
+    // Load Vendor Inputs in Settings
+    function initVendorLinkInputs() {
+      const vendorKeys = [
+        'radwa', 'asmak', 'nahdi', 'panda', 'sharbatly',
+        'ujba', 'q_store', 'amazon', 'neighborhood_store', 'plastics_shop'
+      ];
+
+      vendorKeys.forEach(key => {
+        const input = document.getElementById(`link-${key}`);
+        if (input) {
+          input.value = appData.links[key] || '';
+        }
+      });
+    }
+
+    // Save All 10 Vendor Links
+    function saveAllVendorLinks() {
+      const vendorKeys = [
+        'radwa', 'asmak', 'nahdi', 'panda', 'sharbatly',
+        'ujba', 'q_store', 'amazon', 'neighborhood_store', 'plastics_shop'
+      ];
+
+      vendorKeys.forEach(key => {
+        const input = document.getElementById(`link-${key}`);
+        if (input) {
+          appData.links[key] = input.value.trim();
+        }
+      });
+
+      saveAppState();
+      showToast('تم حفظ جميع روابط المتاجر بنجاح ✓');
+    }
+
+    function resetDefaults() {
+      if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات والجداول والروابط إلى الوضع الافتراضي؟')) {
+        localStorage.removeItem(STORAGE_KEY);
+        loadAppState();
+        initScheduleDropdowns();
+        initVendorLinkInputs();
+        renderHomeCards();
+        showToast('تمت استعادة الإعدادات الأصلية');
+      }
+    }
+
+    /* ========================================================
+       INVOICE SCANNER SIMULATION
+       ======================================================== */
+    function handleInvoiceUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const placeholder = document.getElementById('invoicePlaceholderArea');
+      placeholder.innerHTML = `
+        <div class="flex flex-col items-center">
+          <div class="w-10 h-10 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p class="text-sm font-black text-navy">جارٍ فحص وتحليل الفاتورة بالذكاء الاصطناعي...</p>
+          <span class="text-xs text-gray-400 mt-1">${escapeHtml(file.name)}</span>
+        </div>
+      `;
+
+      setTimeout(() => {
+        placeholder.innerHTML = `
+          <div class="w-full text-right space-y-2.5">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+              <span class="text-sm font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">تم التحليل بنجاح ✓</span>
+              <span class="text-xs text-gray-400">إجمالي الأصناف: ٤</span>
+            </div>
+            <div class="space-y-1.5 text-sm text-appDark">
+              <div class="flex justify-between py-1 border-b border-gray-50"><span>حليب المراعي كامل الدسم</span><span class="font-bold text-navy">١١.٠٠ ر.س</span></div>
+              <div class="flex justify-between py-1 border-b border-gray-50"><span>كرتون ماء نوفا</span><span class="font-bold text-navy">١٧.٢٥ ر.س</span></div>
+              <div class="flex justify-between py-1 border-b border-gray-50"><span>خبز توست بر</span><span class="font-bold text-navy">٥.٥٠ ر.س</span></div>
+              <div class="flex justify-between py-1"><span>طماطم محلي (١ كجم)</span><span class="font-bold text-navy">٦.٥٠ ر.س</span></div>
+            </div>
+            <button onclick="restoreInvoicePlaceholder()" class="w-full mt-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm transition">
+              مسح فاتورة أخرى
+            </button>
+          </div>
+        `;
+        showToast('تم استخراج منتجات الفاتورة بنجاح');
+      }, 1400);
+    }
+
+    function restoreInvoicePlaceholder() {
+      const placeholder = document.getElementById('invoicePlaceholderArea');
+      placeholder.innerHTML = `
+        <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 mb-3 border border-gray-100">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <p class="text-sm font-bold text-gray-400 max-w-[220px] leading-relaxed">
+          سيتم تحليل الفاتورة وعرض المنتجات هنا...
+        </p>
+        <span class="text-xs text-gray-400 mt-2 bg-gray-50 px-2.5 py-1 rounded-full">يدعم فواتير السوبرماركت والمقاضي</span>
+      `;
+    }
+
+    /* ========================================================
+       TAB SWITCHING
+       ======================================================== */
+    function switchTab(tabId) {
+      const tabs = ['home', 'bills', 'compare', 'settings'];
+      
+      tabs.forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        const navBtn = document.getElementById(`nav-${t}`);
+        
+        if (t === tabId) {
+          sec.classList.remove('hidden');
+          navBtn.classList.remove('text-gray-400');
+          navBtn.classList.add('text-navy');
+          navBtn.querySelector('span').classList.add('font-black');
+        } else {
+          sec.classList.add('hidden');
+          navBtn.classList.remove('text-navy');
+          navBtn.classList.add('text-gray-400');
+          navBtn.querySelector('span').classList.remove('font-black');
+        }
+      });
+    }
+
+    /* ========================================================
+       UTILITIES
+       ======================================================== */
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2400);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        })[m];
+      });
+    }
+
+    // App Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAppState();
+      renderHomeCards();
+      initScheduleDropdowns();
+      initVendorLinkInputs();
+    });
+  </script>
+</body>
+</html>
