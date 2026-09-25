@@ -2,8 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>تطبيق البيت</title>
+
+  <!-- iOS Standalone Full-Screen Mode Configuration -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- Firebase v10 Compat CDN Scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
@@ -202,7 +206,7 @@
         <div class="px-0.5">
           <div class="flex items-center gap-2">
             <h2 class="text-lg font-black text-navy leading-none">المحاسب الذكي للفواتير</h2>
-            <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold">Gemini 1.5 + Firestore</span>
+            <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold">Gemini 3.5 Flash Lite + Firestore</span>
           </div>
           <p class="text-xs text-gray-500 mt-1">التقط صورة الفاتورة ليقوم الذكاء الاصطناعي باستخراج المنتجات وحفظها في قاعدة البيانات</p>
         </div>
@@ -351,7 +355,7 @@
           </div>
 
           <p class="text-xs text-gray-500 leading-relaxed">
-            يُستخدم هذا المفتاح مع نموذج <span class="font-bold text-navy">Gemini 1.5 Flash</span> لقراءة الفواتير بدقة. يُحفظ في ذاكرة جهازك فقط ولا يغادره مطلقاً.
+            يُستخدم هذا المفتاح مع نموذج <span class="font-bold text-navy">Gemini 3.5 Flash Lite</span> لقراءة الفواتير بدقة وسرعة فائقة. يُحفظ في ذاكرة جهازك فقط ولا يغادره مطلقاً.
           </p>
 
           <div class="relative">
@@ -454,27 +458,27 @@
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٦. يجبى</label>
-              <input type="url" id="link-ujba" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-ujba" placeholder="https://..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٧. متجر كيو</label>
-              <input type="url" id="link-q_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-q_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٨. أمازون</label>
-              <input type="url" id="link-amazon" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-amazon" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٩. متجر الحي</label>
-              <input type="url" id="link-neighborhood_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-neighborhood_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">١٠. محل البلاستيكات</label>
-              <input type="url" id="link-plastics_shop" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-plastics_shop" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <button onclick="saveAllVendorLinks()" class="w-full mt-2 py-3 rounded-xl bg-navy hover:bg-navy-dark text-white font-black text-sm shadow-md shadow-navy/20 transition active:scale-[0.98]">
@@ -1138,7 +1142,7 @@
     }
 
     /* ========================================================
-       AI RECEIPT PARSER (GEMINI 1.5 FLASH) & FIRESTORE
+       AI RECEIPT PARSER (GEMINI 3.5 FLASH LITE) & FIRESTORE
        ======================================================== */
     async function processReceiptImage(event) {
       const file = event.target.files[0];
@@ -1160,7 +1164,7 @@
       container.innerHTML = `
         <div class="flex flex-col items-center py-6">
           <div class="w-12 h-12 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3.5"></div>
-          <p class="text-sm font-black text-navy">جارٍ قراءة وتحليل الفاتورة بنموذج Gemini 1.5 Flash...</p>
+          <p class="text-sm font-black text-navy">جارٍ قراءة وتحليل الفاتورة بنموذج Gemini 3.5 Flash Lite...</p>
           <span class="text-xs text-gray-400 mt-1">${escapeHtml(file.name)}</span>
           <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse">يتم استخراج المنتجات والأسعار والتصنيفات</span>
         </div>
@@ -1170,8 +1174,8 @@
         // 3. Convert Image to Base64
         const base64Data = await fileToBase64(file);
 
-        // 4. Gemini 1.5 Flash API Call
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+        // 4. Gemini 3.5 Flash Lite API Call
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey.trim()}`;
         const promptText = "أنت محاسب مالي ذكي. اقرأ هذه الفاتورة واستخرج المنتجات، أسعارها، واسم المتجر. صنف المنتجات تلقائيا (مثلا: لحوم، خضار، منظفات). أعد البيانات بصيغة JSON فقط كالتالي: array of objects with keys: name, price, category, store.";
 
         const requestBody = {
