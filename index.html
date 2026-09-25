@@ -206,7 +206,7 @@
         <div class="px-0.5">
           <div class="flex items-center gap-2">
             <h2 class="text-lg font-black text-navy leading-none">المحاسب الذكي للفواتير</h2>
-            <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold">Gemini 3.5 Flash Lite + Firestore</span>
+            <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold">Gemini 3.5 Flash-Lite + Firestore</span>
           </div>
           <p class="text-xs text-gray-500 mt-1">التقط صورة الفاتورة ليقوم الذكاء الاصطناعي باستخراج المنتجات وحفظها في قاعدة البيانات</p>
         </div>
@@ -258,17 +258,17 @@
           <span class="text-xs text-gray-400 mt-2 bg-gray-50 px-2.5 py-1 rounded-full">يدعم فواتير السوبرماركت والمقاضي</span>
         </div>
 
-        <!-- Recent Saved Invoices in Firestore -->
+        <!-- Recent Saved Invoices in Firestore (Accordion Details) -->
         <div class="pt-2">
-          <div class="flex items-center justify-between mb-2 px-1">
+          <div class="flex items-center justify-between mb-2.5 px-1">
             <span class="text-xs font-bold text-gray-500">الفواتير المحفوظة في السحاب (Firestore)</span>
             <button onclick="fetchRecentFirestoreReceipts()" class="text-xs text-olive hover:underline font-bold flex items-center gap-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
               تحديث
             </button>
           </div>
-          <div id="firestoreReceiptsList" class="space-y-2">
-            <!-- Loaded dynamically from Firestore -->
+          <div id="firestoreReceiptsList" class="space-y-2.5">
+            <!-- Loaded dynamically from Firestore as interactive accordions -->
           </div>
         </div>
 
@@ -355,7 +355,7 @@
           </div>
 
           <p class="text-xs text-gray-500 leading-relaxed">
-            يُستخدم هذا المفتاح مع نموذج <span class="font-bold text-navy">Gemini 3.5 Flash Lite</span> لقراءة الفواتير بدقة وسرعة فائقة. يُحفظ في ذاكرة جهازك فقط ولا يغادره مطلقاً.
+            يُستخدم هذا المفتاح مع نموذج <span class="font-bold text-navy">Gemini 3.5 Flash-Lite</span> لقراءة الفواتير بدقة وسرعة فائقة. يُحفظ في ذاكرة جهازك فقط ولا يغادره مطلقاً.
           </p>
 
           <div class="relative">
@@ -463,22 +463,22 @@
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٧. متجر كيو</label>
-              <input type="url" id="link-q_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-q_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٨. أمازون</label>
-              <input type="url" id="link-amazon" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-amazon" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٩. متجر الحي</label>
-              <input type="url" id="link-neighborhood_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-neighborhood_store" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">١٠. محل البلاستيكات</label>
-              <input type="url" id="link-plastics_shop" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-plastics_shop" placeholder="أدخل رابط المتجر..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <button onclick="saveAllVendorLinks()" class="w-full mt-2 py-3 rounded-xl bg-navy hover:bg-navy-dark text-white font-black text-sm shadow-md shadow-navy/20 transition active:scale-[0.98]">
@@ -1142,7 +1142,7 @@
     }
 
     /* ========================================================
-       AI RECEIPT PARSER (GEMINI 3.5 FLASH LITE) & FIRESTORE
+       AI RECEIPT PARSER (GEMINI 3.5 FLASH-LITE) & FIRESTORE
        ======================================================== */
     async function processReceiptImage(event) {
       const file = event.target.files[0];
@@ -1164,9 +1164,9 @@
       container.innerHTML = `
         <div class="flex flex-col items-center py-6">
           <div class="w-12 h-12 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3.5"></div>
-          <p class="text-sm font-black text-navy">جارٍ قراءة وتحليل الفاتورة بنموذج Gemini 3.5 Flash Lite...</p>
+          <p class="text-sm font-black text-navy">جارٍ تحليل الفاتورة بدقة بواسطة Gemini 3.5 Flash-Lite...</p>
           <span class="text-xs text-gray-400 mt-1">${escapeHtml(file.name)}</span>
-          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse">يتم استخراج المنتجات والأسعار والتصنيفات</span>
+          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse">يتم استخراج أسماء المنتجات والكميات وأسعار الوحدات</span>
         </div>
       `;
 
@@ -1174,9 +1174,29 @@
         // 3. Convert Image to Base64
         const base64Data = await fileToBase64(file);
 
-        // 4. Gemini 3.5 Flash Lite API Call
+        // 4. Gemini 3.5 Flash-Lite API Call with Enhanced Extraction Prompt
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey.trim()}`;
-        const promptText = "أنت محاسب مالي ذكي. اقرأ هذه الفاتورة واستخرج المنتجات، أسعارها، واسم المتجر. صنف المنتجات تلقائيا (مثلا: لحوم، خضار، منظفات). أعد البيانات بصيغة JSON فقط كالتالي: array of objects with keys: name, price, category, store.";
+        
+        // Exact Prompt String specified in Update 1
+        const promptText = `أنت محاسب مالي ذكي. اقرأ هذه الفاتورة واستخرج البيانات بدقة:
+
+اسم المتجر.
+
+المنتجات: لكل منتج استخرج:
+
+raw_name: اسم المنتج كما هو مكتوب في الفاتورة.
+
+standard_name: اسم موحد ونظيف للمنتج (مثلا 'صفاء مكة ابوص 40*330' اجعله 'ماء صفا 330 مل 40 عبوة').
+
+quantity: الكمية (رقم صحيح). إذا لم تذكر افترض أنها 1.
+
+unit_price: سعر الحبة الواحدة.
+
+total_price: السعر الإجمالي لهذا المنتج.
+
+category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
+أعد البيانات بصيغة JSON فقط بهذا الهيكل:
+{ "store_name": "اسم المتجر", "items": [ { "raw_name": "", "standard_name": "", "quantity": 1, "unit_price": 0.0, "total_price": 0.0, "category": "" } ] }`;
 
         const requestBody = {
           contents: [
@@ -1212,53 +1232,77 @@
         const rawContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!rawContent) throw new Error('لم يتم استخراج أي نص من صورة الفاتورة');
 
-        // Clean & Parse JSON
+        // Clean & Parse JSON strictly according to the new structure
         const cleanedJson = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
         let parsedResult = JSON.parse(cleanedJson);
 
-        let itemsArray = [];
         let detectedStore = "سوبرماركت عام";
+        let rawItems = [];
 
-        if (Array.isArray(parsedResult)) {
-          itemsArray = parsedResult;
-          if (itemsArray[0]?.store) detectedStore = itemsArray[0].store;
-        } else if (parsedResult && typeof parsedResult === 'object') {
-          if (Array.isArray(parsedResult.items)) itemsArray = parsedResult.items;
-          else if (Array.isArray(parsedResult.products)) itemsArray = parsedResult.products;
-          if (parsedResult.store) detectedStore = parsedResult.store;
+        if (parsedResult && typeof parsedResult === 'object') {
+          if (parsedResult.store_name) detectedStore = parsedResult.store_name;
+          else if (parsedResult.store) detectedStore = parsedResult.store;
+
+          if (Array.isArray(parsedResult.items)) {
+            rawItems = parsedResult.items;
+          } else if (Array.isArray(parsedResult.products)) {
+            rawItems = parsedResult.products;
+          }
+        } else if (Array.isArray(parsedResult)) {
+          rawItems = parsedResult;
+          if (rawItems[0]?.store_name || rawItems[0]?.store) {
+            detectedStore = rawItems[0].store_name || rawItems[0].store;
+          }
         }
 
-        if (!itemsArray || itemsArray.length === 0) {
+        if (!rawItems || rawItems.length === 0) {
           throw new Error('لم يتم التعرف على بنود واضحة داخل الفاتورة');
         }
 
-        // Calculate Total
+        // Standardize Items Array & Calculate Accurate Totals
         let totalSum = 0;
-        itemsArray.forEach(item => {
-          const priceNum = parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
-          totalSum += priceNum;
+        const normalizedItems = rawItems.map(item => {
+          const qty = parseInt(item.quantity) || 1;
+          const unitPrice = parseFloat(String(item.unit_price || 0).replace(/[^0-9.]/g, '')) || 0;
+          let totalPrice = parseFloat(String(item.total_price || 0).replace(/[^0-9.]/g, '')) || 0;
+
+          if (totalPrice === 0 && unitPrice > 0) {
+            totalPrice = unitPrice * qty;
+          }
+
+          totalSum += totalPrice;
+
+          return {
+            raw_name: item.raw_name || item.name || '',
+            standard_name: item.standard_name || item.name || item.raw_name || 'صنف غير محدد',
+            quantity: qty,
+            unit_price: parseFloat(unitPrice.toFixed(2)),
+            total_price: parseFloat(totalPrice.toFixed(2)),
+            category: item.category || 'عام'
+          };
         });
 
-        // 5. Save to Firebase Firestore (Receipts Collection)
+        // 5. Save Structured Transaction to Firebase Firestore (Receipts Collection)
         let savedToFirestore = false;
         if (db) {
           try {
             await db.collection('receipts').add({
-              store: detectedStore,
-              items: itemsArray,
+              store_name: detectedStore,
+              store: detectedStore, // backward compatibility
+              items: normalizedItems,
               total: parseFloat(totalSum.toFixed(2)),
               createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-              itemCount: itemsArray.length
+              itemCount: normalizedItems.length
             });
             savedToFirestore = true;
-            fetchRecentFirestoreReceipts(); // Update recent list
+            fetchRecentFirestoreReceipts(); // Update saved list
           } catch (fsErr) {
             console.error("Firestore Save Error:", fsErr);
           }
         }
 
-        // 6. Render UI Results
-        renderParsedReceiptUI(detectedStore, itemsArray, totalSum, savedToFirestore);
+        // 6. Render UI Results for Current Scan
+        renderParsedReceiptUI(detectedStore, normalizedItems, totalSum, savedToFirestore);
         showToast(savedToFirestore ? 'تم التحليل وحفظ الفاتورة في Firestore ✓' : 'تم التحليل بنجاح ✓');
 
       } catch (error) {
@@ -1284,14 +1328,24 @@
       let rowsHtml = '';
       items.forEach(item => {
         const cat = item.category || 'عام';
-        const price = parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+        const name = item.standard_name || item.raw_name || 'صنف';
+        const qty = item.quantity || 1;
+        const unitPrice = parseFloat(item.unit_price || 0).toFixed(2);
+        const totalPrice = parseFloat(item.total_price || 0).toFixed(2);
+
         rowsHtml += `
           <div class="flex justify-between items-center py-2 border-b border-gray-100 text-xs">
-            <div class="text-right">
-              <span class="font-bold text-appDark block text-sm">${escapeHtml(item.name || 'صنف')}</span>
-              <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded-md font-bold">${escapeHtml(cat)}</span>
+            <div class="text-right flex-1 pr-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-appDark block text-sm">${escapeHtml(name)}</span>
+                <span class="text-[11px] font-bold text-navy bg-navy-soft px-1.5 py-0.2 rounded">×${qty}</span>
+              </div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded-md font-bold">${escapeHtml(cat)}</span>
+                <span class="text-[10px] text-gray-400">سعر الحبة: ${unitPrice} ر.س</span>
+              </div>
             </div>
-            <span class="font-black text-navy text-sm">${price.toFixed(2)} ر.س</span>
+            <span class="font-black text-navy text-sm flex-shrink-0">${totalPrice} ر.س</span>
           </div>
         `;
       });
@@ -1337,33 +1391,116 @@
       });
     }
 
+    /* ========================================================
+       ACCORDION RECEIPT DETAILS (FIRESTORE)
+       ======================================================== */
     async function fetchRecentFirestoreReceipts() {
       const listEl = document.getElementById('firestoreReceiptsList');
       if (!db || !listEl) return;
 
       try {
-        const snapshot = await db.collection('receipts').orderBy('createdAt', 'desc').limit(3).get();
+        const snapshot = await db.collection('receipts').orderBy('createdAt', 'desc').limit(5).get();
         if (snapshot.empty) {
-          listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">لا توجد فواتير سابقة محفوظة بعد</p>`;
+          listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-3 bg-white rounded-2xl border border-gray-100">لا توجد فواتير سابقة محفوظة بعد</p>`;
           return;
         }
 
         listEl.innerHTML = '';
-        snapshot.forEach(doc => {
+        snapshot.forEach((doc, idx) => {
           const data = doc.data();
+          const storeName = data.store_name || data.store || 'سوبرماركت عام';
+          const totalAmount = parseFloat(data.total || 0).toFixed(2);
+          const items = data.items || [];
+          
+          // Format date cleanly
+          let dateStr = 'مؤخراً';
+          if (data.createdAt && data.createdAt.toDate) {
+            const d = data.createdAt.toDate();
+            dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
+          }
+
+          const cardId = `receipt-details-${doc.id || idx}`;
+          const arrowId = `receipt-arrow-${doc.id || idx}`;
+
+          // Build Details Item Rows (standard_name, quantity, unit_price)
+          let itemsListHtml = '';
+          if (items.length > 0) {
+            items.forEach(it => {
+              const name = it.standard_name || it.name || it.raw_name || 'صنف غير محدد';
+              const qty = it.quantity || 1;
+              const unitPrice = parseFloat(it.unit_price || 0).toFixed(2);
+              const totalPrice = parseFloat(it.total_price || (it.unit_price * qty) || 0).toFixed(2);
+
+              itemsListHtml += `
+                <div class="flex items-center justify-between py-2 border-b border-gray-100/70 last:border-0 text-xs">
+                  <div class="flex-1 pr-1 min-w-0">
+                    <span class="font-bold text-appDark block truncate">${escapeHtml(name)}</span>
+                    <span class="text-[10px] text-gray-400 font-medium">الكمية: ${qty} • سعر الحبة: ${unitPrice} ر.س</span>
+                  </div>
+                  <span class="font-black text-navy text-xs flex-shrink-0">${totalPrice} ر.س</span>
+                </div>
+              `;
+            });
+          } else {
+            itemsListHtml = `<p class="text-xs text-gray-400 text-center py-2">لا تتوفر تفاصيل أصناف لهذه الفاتورة</p>`;
+          }
+
           const card = document.createElement('div');
-          card.className = "bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between text-xs";
+          card.className = "bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-200";
+
           card.innerHTML = `
-            <div>
-              <span class="font-bold text-appDark block text-sm">${escapeHtml(data.store || 'سوبرماركت')}</span>
-              <span class="text-[10px] text-gray-400">${data.items?.length || 0} أصناف</span>
+            <!-- Header (Store, Date, Total, Rotating Down-Arrow) -->
+            <div class="p-3.5 flex items-center justify-between cursor-pointer select-none active:bg-gray-50/80 transition"
+                 onclick="toggleReceiptAccordion('${cardId}', '${arrowId}')">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-olive-soft text-olive flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="font-bold text-appDark block text-sm leading-snug">${escapeHtml(storeName)}</span>
+                  <span class="text-[11px] text-gray-400">${dateStr} • ${items.length} أصناف</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2.5">
+                <span class="font-black text-olive text-sm">${totalAmount} ر.س</span>
+                <!-- SVG Expandable Down-Arrow Indicator -->
+                <svg id="${arrowId}" class="w-4 h-4 text-gray-400 transition-transform duration-200 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
             </div>
-            <span class="font-black text-olive text-sm">${parseFloat(data.total || 0).toFixed(2)} ر.س</span>
+
+            <!-- Details Container (Hidden by default, smooth accordion) -->
+            <div id="${cardId}" class="hidden px-3.5 pb-3 pt-1 border-t border-gray-100 bg-gray-50/60">
+              <div class="py-1">
+                ${itemsListHtml}
+              </div>
+            </div>
           `;
+
           listEl.appendChild(card);
         });
       } catch (err) {
         console.warn("Error fetching receipts from Firestore:", err);
+      }
+    }
+
+    // Toggle Details Visibility & Rotate Arrow Icon
+    function toggleReceiptAccordion(containerId, arrowId) {
+      const container = document.getElementById(containerId);
+      const arrow = document.getElementById(arrowId);
+      if (!container || !arrow) return;
+
+      const isHidden = container.classList.contains('hidden');
+      if (isHidden) {
+        container.classList.remove('hidden');
+        arrow.classList.add('rotate-180');
+      } else {
+        container.classList.add('hidden');
+        arrow.classList.remove('rotate-180');
       }
     }
 
