@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>تطبيق البيت</title>
 
+  <!-- Firebase v10 Compat CDN Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -81,7 +85,7 @@
       font-display: swap;
     }
 
-    /* Enforce Thmanyah Serif Display Globally (No Sans-Serif) */
+    /* Enforce Thmanyah Serif Display Globally */
     *, *::before, *::after, html, body, input, select, textarea, button {
       font-family: 'Thmanyah Serif Display', serif !important;
     }
@@ -198,14 +202,14 @@
         <div class="px-0.5">
           <div class="flex items-center gap-2">
             <h2 class="text-lg font-black text-navy leading-none">المحاسب الذكي للفواتير</h2>
-            <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold">ذكاء اصطناعي</span>
+            <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold">Gemini 1.5 + Firestore</span>
           </div>
-          <p class="text-xs text-gray-500 mt-1">التقط صورة فاتورة المقاضي أو ارفعها لاستخراج وقراءة الأصناف تلقائياً</p>
+          <p class="text-xs text-gray-500 mt-1">التقط صورة الفاتورة ليقوم الذكاء الاصطناعي باستخراج المنتجات وحفظها في قاعدة البيانات</p>
         </div>
 
         <!-- Hidden Native File Inputs -->
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleInvoiceUpload(event)">
-        <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleInvoiceUpload(event)">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="processReceiptImage(event)">
+        <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="processReceiptImage(event)">
 
         <!-- Action Upload Buttons -->
         <div class="grid grid-cols-2 gap-3">
@@ -237,8 +241,8 @@
 
         </div>
 
-        <!-- Clean Scan Placeholder Area -->
-        <div id="invoicePlaceholderArea" class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-8 flex flex-col items-center justify-center text-center min-h-[260px] transition-all">
+        <!-- Interactive Processing / Results Container -->
+        <div id="invoiceContainer" class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-6 flex flex-col items-center justify-center text-center min-h-[260px] transition-all">
           <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 mb-3 border border-gray-100">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -248,6 +252,20 @@
             سيتم تحليل الفاتورة وعرض المنتجات هنا...
           </p>
           <span class="text-xs text-gray-400 mt-2 bg-gray-50 px-2.5 py-1 rounded-full">يدعم فواتير السوبرماركت والمقاضي</span>
+        </div>
+
+        <!-- Recent Saved Invoices in Firestore -->
+        <div class="pt-2">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-xs font-bold text-gray-500">الفواتير المحفوظة في السحاب (Firestore)</span>
+            <button onclick="fetchRecentFirestoreReceipts()" class="text-xs text-olive hover:underline font-bold flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              تحديث
+            </button>
+          </div>
+          <div id="firestoreReceiptsList" class="space-y-2">
+            <!-- Loaded dynamically from Firestore -->
+          </div>
         </div>
 
       </section>
@@ -317,7 +335,38 @@
       <section id="tab-settings" class="hidden space-y-4">
         <div>
           <h2 class="text-lg font-black text-navy leading-none">إعدادات التطبيق</h2>
-          <p class="text-xs text-gray-500 mt-1">تعديل جدول تكرار المهام وروابط المتاجر الخارجية</p>
+          <p class="text-xs text-gray-500 mt-1">إعدادات الذكاء الاصطناعي وجدول المهام وروابط المتاجر</p>
+        </div>
+
+        <!-- 0. SECURE GEMINI API KEY SECTION -->
+        <div class="bg-white p-4 rounded-2xl border border-olive/30 shadow-sm space-y-2.5 relative overflow-hidden">
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-olive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <h3 class="text-sm font-black text-navy">مفتاح الذكاء الاصطناعي (Gemini API Key)</h3>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">آمن ومحلي</span>
+          </div>
+
+          <p class="text-xs text-gray-500 leading-relaxed">
+            يُستخدم هذا المفتاح مع نموذج <span class="font-bold text-navy">Gemini 1.5 Flash</span> لقراءة الفواتير بدقة. يُحفظ في ذاكرة جهازك فقط ولا يغادره مطلقاً.
+          </p>
+
+          <div class="relative">
+            <input type="password" id="geminiApiKeyInput" placeholder="أدخل مفتاح AIzaSy..." dir="ltr"
+                   class="w-full text-sm p-2.5 pl-9 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+            <button type="button" onclick="toggleApiKeyVisibility()" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy">
+              <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+
+          <button onclick="saveGeminiApiKey()" class="w-full py-2.5 rounded-xl bg-olive hover:bg-olive-dark text-white font-black text-sm shadow-md shadow-olive/20 transition active:scale-[0.98]">
+            حفظ مفتاح Gemini
+          </button>
         </div>
 
         <!-- 1. Interactive Schedule Management (All Dropdowns) -->
@@ -385,7 +434,7 @@
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٢. الأسماك</label>
-              <input type="url" id="link-asmak" placeholder="https://..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-asmak" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
@@ -400,7 +449,7 @@
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٥. الشربتلي</label>
-              <input type="url" id="link-sharbatly" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-sharbatly" placeholder="https://..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
@@ -486,7 +535,7 @@
       <!-- Backdrop Click to Dismiss -->
       <div class="flex-1" onclick="closeTaskModal()"></div>
 
-      <!-- Modal Bottom Sheet Sheet Body -->
+      <!-- Modal Bottom Sheet Body -->
       <div class="bg-white rounded-t-[32px] p-5 max-h-[88%] flex flex-col shadow-2xl animate-slide-up border-t border-gray-100">
         
         <!-- Header -->
@@ -560,6 +609,26 @@
   <!-- Application Logic -->
   <script>
     /* ========================================================
+       FIREBASE INITIALIZATION (v10 COMPAT)
+       ======================================================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoXtiP6T8vRFyRyCVh0pteMZ2AVpzQGjI",
+      authDomain: "homeapp-db-c7a50.firebaseapp.com",
+      projectId: "homeapp-db-c7a50",
+      storageBucket: "homeapp-db-c7a50.firebasestorage.app",
+      messagingSenderId: "453649433228",
+      appId: "1:453649433228:web:2e3632415cbdc7a8abf1a9"
+    };
+
+    let db;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+    } catch (e) {
+      console.warn("Firebase Init Notice:", e);
+    }
+
+    /* ========================================================
        SCHEDULE OPTIONS & VENDOR DATA SPECIFICATION
        ======================================================== */
     const SCHEDULE_OPTIONS = [
@@ -573,10 +642,10 @@
     ];
 
     const STORAGE_KEY = 'tatbiq_albayt_state_v2';
+    const GEMINI_STORAGE_KEY = 'gemini_api_key';
 
     // Master Default Data
     const defaultState = {
-      // 10 External Vendors:
       links: {
         radwa: "https://saudiradwa.com/ar/checkout/cart",
         asmak: "https://smmkha.com/ar/cart",
@@ -695,11 +764,9 @@
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           appData = JSON.parse(stored);
-          // Fallbacks for any missing properties
           if (!appData.links) appData.links = { ...defaultState.links };
           if (!appData.tasks) appData.tasks = { ...defaultState.tasks };
           
-          // Ensure all default vendor keys exist
           Object.keys(defaultState.links).forEach(key => {
             if (appData.links[key] === undefined) {
               appData.links[key] = defaultState.links[key];
@@ -715,7 +782,6 @@
       }
     }
 
-    // Save to LocalStorage
     function saveAppState() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
@@ -880,7 +946,6 @@
       }
     }
 
-    // Top (+) Button Prompt
     function promptQuickAddItem() {
       const val = prompt('أدخل اسم الغرض المراد إضافته إلى القائمة:');
       if (val && val.trim()) {
@@ -888,7 +953,6 @@
       }
     }
 
-    // Bottom Inline Add Trigger
     function handleAddItem() {
       const input = document.getElementById('newItemInput');
       const val = input.value.trim();
@@ -919,13 +983,11 @@
       renderModalChecklist();
     }
 
-    // Dynamic Action Buttons configured through localStorage URLs
     function renderModalActionButtons(task) {
       const container = document.getElementById('modalActionButtons');
       container.innerHTML = '';
 
       if (task.id === 'drygoods') {
-        // "نواشف": "تم الشراء" Button
         const btn = document.createElement('button');
         btn.className = `w-full py-3 rounded-xl font-black text-sm transition active:scale-[0.98] ${
           task.completed 
@@ -942,7 +1004,6 @@
         container.appendChild(btn);
 
       } else if (task.actions) {
-        // Multi-Vendor Buttons
         const colClass = task.actions.length === 3 ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-2 gap-2.5';
         const grid = document.createElement('div');
         grid.className = colClass;
@@ -961,7 +1022,6 @@
             </svg>
           `;
 
-          // Handle click: Read dynamic URL from localStorage
           btn.onclick = () => {
             const destUrl = (appData.links && appData.links[action.vendorKey]) ? appData.links[action.vendorKey].trim() : '';
             if (destUrl && destUrl !== '#' && destUrl.length > 3) {
@@ -979,9 +1039,8 @@
     }
 
     /* ========================================================
-       SETTINGS: SCHEDULES & VENDOR LINKS
+       SETTINGS: SCHEDULES, LINKS & GEMINI API KEY
        ======================================================== */
-    // Initialize Schedule Dropdowns with Options
     function initScheduleDropdowns() {
       const taskKeys = ['vegetables', 'drygoods', 'water', 'proteins', 'monthly', 'cleaning'];
 
@@ -1004,7 +1063,6 @@
       });
     }
 
-    // Update Task Schedule from Dropdown
     function updateTaskSchedule(taskId, newSchedule) {
       if (appData.tasks[taskId]) {
         appData.tasks[taskId].schedule = newSchedule;
@@ -1014,7 +1072,6 @@
       }
     }
 
-    // Load Vendor Inputs in Settings
     function initVendorLinkInputs() {
       const vendorKeys = [
         'radwa', 'asmak', 'nahdi', 'panda', 'sharbatly',
@@ -1029,7 +1086,6 @@
       });
     }
 
-    // Save All 10 Vendor Links
     function saveAllVendorLinks() {
       const vendorKeys = [
         'radwa', 'asmak', 'nahdi', 'panda', 'sharbatly',
@@ -1047,6 +1103,29 @@
       showToast('تم حفظ جميع روابط المتاجر بنجاح ✓');
     }
 
+    function loadGeminiApiKeyInput() {
+      const key = localStorage.getItem(GEMINI_STORAGE_KEY) || '';
+      const input = document.getElementById('geminiApiKeyInput');
+      if (input) input.value = key;
+    }
+
+    function saveGeminiApiKey() {
+      const input = document.getElementById('geminiApiKeyInput');
+      const val = input.value.trim();
+      if (!val) {
+        localStorage.removeItem(GEMINI_STORAGE_KEY);
+        showToast('تم مسح مفتاح Gemini');
+      } else {
+        localStorage.setItem(GEMINI_STORAGE_KEY, val);
+        showToast('تم حفظ مفتاح Gemini بنجاح ✓');
+      }
+    }
+
+    function toggleApiKeyVisibility() {
+      const input = document.getElementById('geminiApiKeyInput');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
     function resetDefaults() {
       if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات والجداول والروابط إلى الوضع الافتراضي؟')) {
         localStorage.removeItem(STORAGE_KEY);
@@ -1059,45 +1138,233 @@
     }
 
     /* ========================================================
-       INVOICE SCANNER SIMULATION
+       AI RECEIPT PARSER (GEMINI 1.5 FLASH) & FIRESTORE
        ======================================================== */
-    function handleInvoiceUpload(e) {
-      const file = e.target.files[0];
+    async function processReceiptImage(event) {
+      const file = event.target.files[0];
       if (!file) return;
 
-      const placeholder = document.getElementById('invoicePlaceholderArea');
-      placeholder.innerHTML = `
-        <div class="flex flex-col items-center">
-          <div class="w-10 h-10 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p class="text-sm font-black text-navy">جارٍ فحص وتحليل الفاتورة بالذكاء الاصطناعي...</p>
+      // 1. Verify Gemini API Key exists
+      const apiKey = localStorage.getItem(GEMINI_STORAGE_KEY);
+      if (!apiKey || !apiKey.trim()) {
+        alert('تنبيه: يرجى إدخال وحفظ مفتاح Gemini API في تبويب (الإعدادات) أولاً لتشغيل قارئ الفواتير الذكي.');
+        switchTab('settings');
+        document.getElementById('geminiApiKeyInput')?.focus();
+        event.target.value = '';
+        return;
+      }
+
+      const container = document.getElementById('invoiceContainer');
+      
+      // 2. Show Processing Spinner UI
+      container.innerHTML = `
+        <div class="flex flex-col items-center py-6">
+          <div class="w-12 h-12 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3.5"></div>
+          <p class="text-sm font-black text-navy">جارٍ قراءة وتحليل الفاتورة بنموذج Gemini 1.5 Flash...</p>
           <span class="text-xs text-gray-400 mt-1">${escapeHtml(file.name)}</span>
+          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse">يتم استخراج المنتجات والأسعار والتصنيفات</span>
         </div>
       `;
 
-      setTimeout(() => {
-        placeholder.innerHTML = `
-          <div class="w-full text-right space-y-2.5">
-            <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-              <span class="text-sm font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">تم التحليل بنجاح ✓</span>
-              <span class="text-xs text-gray-400">إجمالي الأصناف: ٤</span>
-            </div>
-            <div class="space-y-1.5 text-sm text-appDark">
-              <div class="flex justify-between py-1 border-b border-gray-50"><span>حليب المراعي كامل الدسم</span><span class="font-bold text-navy">١١.٠٠ ر.س</span></div>
-              <div class="flex justify-between py-1 border-b border-gray-50"><span>كرتون ماء نوفا</span><span class="font-bold text-navy">١٧.٢٥ ر.س</span></div>
-              <div class="flex justify-between py-1 border-b border-gray-50"><span>خبز توست بر</span><span class="font-bold text-navy">٥.٥٠ ر.س</span></div>
-              <div class="flex justify-between py-1"><span>طماطم محلي (١ كجم)</span><span class="font-bold text-navy">٦.٥٠ ر.س</span></div>
-            </div>
-            <button onclick="restoreInvoicePlaceholder()" class="w-full mt-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm transition">
-              مسح فاتورة أخرى
+      try {
+        // 3. Convert Image to Base64
+        const base64Data = await fileToBase64(file);
+
+        // 4. Gemini 1.5 Flash API Call
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+        const promptText = "أنت محاسب مالي ذكي. اقرأ هذه الفاتورة واستخرج المنتجات، أسعارها، واسم المتجر. صنف المنتجات تلقائيا (مثلا: لحوم، خضار، منظفات). أعد البيانات بصيغة JSON فقط كالتالي: array of objects with keys: name, price, category, store.";
+
+        const requestBody = {
+          contents: [
+            {
+              parts: [
+                { text: promptText },
+                {
+                  inlineData: {
+                    mimeType: file.type || "image/jpeg",
+                    data: base64Data
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        };
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.error?.message || `خطأ استجابة من السيرفر (${response.status})`);
+        }
+
+        const data = await response.json();
+        const rawContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawContent) throw new Error('لم يتم استخراج أي نص من صورة الفاتورة');
+
+        // Clean & Parse JSON
+        const cleanedJson = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
+        let parsedResult = JSON.parse(cleanedJson);
+
+        let itemsArray = [];
+        let detectedStore = "سوبرماركت عام";
+
+        if (Array.isArray(parsedResult)) {
+          itemsArray = parsedResult;
+          if (itemsArray[0]?.store) detectedStore = itemsArray[0].store;
+        } else if (parsedResult && typeof parsedResult === 'object') {
+          if (Array.isArray(parsedResult.items)) itemsArray = parsedResult.items;
+          else if (Array.isArray(parsedResult.products)) itemsArray = parsedResult.products;
+          if (parsedResult.store) detectedStore = parsedResult.store;
+        }
+
+        if (!itemsArray || itemsArray.length === 0) {
+          throw new Error('لم يتم التعرف على بنود واضحة داخل الفاتورة');
+        }
+
+        // Calculate Total
+        let totalSum = 0;
+        itemsArray.forEach(item => {
+          const priceNum = parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+          totalSum += priceNum;
+        });
+
+        // 5. Save to Firebase Firestore (Receipts Collection)
+        let savedToFirestore = false;
+        if (db) {
+          try {
+            await db.collection('receipts').add({
+              store: detectedStore,
+              items: itemsArray,
+              total: parseFloat(totalSum.toFixed(2)),
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              itemCount: itemsArray.length
+            });
+            savedToFirestore = true;
+            fetchRecentFirestoreReceipts(); // Update recent list
+          } catch (fsErr) {
+            console.error("Firestore Save Error:", fsErr);
+          }
+        }
+
+        // 6. Render UI Results
+        renderParsedReceiptUI(detectedStore, itemsArray, totalSum, savedToFirestore);
+        showToast(savedToFirestore ? 'تم التحليل وحفظ الفاتورة في Firestore ✓' : 'تم التحليل بنجاح ✓');
+
+      } catch (error) {
+        console.error("Receipt Processing Error:", error);
+        container.innerHTML = `
+          <div class="py-4 text-center space-y-2">
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-2 font-bold">✕</div>
+            <p class="text-sm font-black text-rose-600">تعذر تحليل الفاتورة</p>
+            <p class="text-xs text-gray-500 max-w-[260px] mx-auto">${escapeHtml(error.message || 'يرجى التأكد من وضوح الصورة وصلاحية المفتاح')}</p>
+            <button onclick="restoreInvoicePlaceholder()" class="mt-3 py-2 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition">
+              إعادة المحاولة
             </button>
           </div>
         `;
-        showToast('تم استخراج منتجات الفاتورة بنجاح');
-      }, 1400);
+      } finally {
+        event.target.value = '';
+      }
+    }
+
+    function renderParsedReceiptUI(store, items, total, isSaved) {
+      const container = document.getElementById('invoiceContainer');
+      
+      let rowsHtml = '';
+      items.forEach(item => {
+        const cat = item.category || 'عام';
+        const price = parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+        rowsHtml += `
+          <div class="flex justify-between items-center py-2 border-b border-gray-100 text-xs">
+            <div class="text-right">
+              <span class="font-bold text-appDark block text-sm">${escapeHtml(item.name || 'صنف')}</span>
+              <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded-md font-bold">${escapeHtml(cat)}</span>
+            </div>
+            <span class="font-black text-navy text-sm">${price.toFixed(2)} ر.س</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = `
+        <div class="w-full text-right space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+            <div>
+              <span class="text-sm font-black text-navy block">${escapeHtml(store)}</span>
+              <span class="text-[10px] text-gray-400">إجمالي الأصناف: ${items.length}</span>
+            </div>
+            <span class="text-xs font-black ${isSaved ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'} px-2.5 py-1 rounded-lg">
+              ${isSaved ? 'محفوظة بالسحاب ✓' : 'محلية'}
+            </span>
+          </div>
+
+          <div class="max-h-52 overflow-y-auto no-scrollbar space-y-1 pr-1">
+            ${rowsHtml}
+          </div>
+
+          <div class="pt-2 border-t border-gray-200 flex justify-between items-center bg-olive-soft/40 p-3 rounded-xl">
+            <span class="text-xs font-black text-navy">المجموع الإجمالي للفاتورة</span>
+            <span class="text-base font-black text-olive">${total.toFixed(2)} ر.س</span>
+          </div>
+
+          <button onclick="restoreInvoicePlaceholder()" class="w-full mt-2 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition">
+            مسح فاتورة جديدة
+          </button>
+        </div>
+      `;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const res = reader.result;
+          const base64 = res.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function fetchRecentFirestoreReceipts() {
+      const listEl = document.getElementById('firestoreReceiptsList');
+      if (!db || !listEl) return;
+
+      try {
+        const snapshot = await db.collection('receipts').orderBy('createdAt', 'desc').limit(3).get();
+        if (snapshot.empty) {
+          listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">لا توجد فواتير سابقة محفوظة بعد</p>`;
+          return;
+        }
+
+        listEl.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = "bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between text-xs";
+          card.innerHTML = `
+            <div>
+              <span class="font-bold text-appDark block text-sm">${escapeHtml(data.store || 'سوبرماركت')}</span>
+              <span class="text-[10px] text-gray-400">${data.items?.length || 0} أصناف</span>
+            </div>
+            <span class="font-black text-olive text-sm">${parseFloat(data.total || 0).toFixed(2)} ر.س</span>
+          `;
+          listEl.appendChild(card);
+        });
+      } catch (err) {
+        console.warn("Error fetching receipts from Firestore:", err);
+      }
     }
 
     function restoreInvoicePlaceholder() {
-      const placeholder = document.getElementById('invoicePlaceholderArea');
+      const placeholder = document.getElementById('invoiceContainer');
       placeholder.innerHTML = `
         <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 mb-3 border border-gray-100">
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1133,6 +1400,10 @@
           navBtn.querySelector('span').classList.remove('font-black');
         }
       });
+
+      if (tabId === 'bills') {
+        fetchRecentFirestoreReceipts();
+      }
     }
 
     /* ========================================================
@@ -1144,11 +1415,11 @@
       toast.classList.remove('hidden');
       setTimeout(() => {
         toast.classList.add('hidden');
-      }, 2400);
+      }, 2600);
     }
 
     function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, function(m) {
+      return String(str).replace(/[&<>"']/g, function(m) {
         return ({
           '&': '&amp;',
           '<': '&lt;',
@@ -1165,6 +1436,8 @@
       renderHomeCards();
       initScheduleDropdowns();
       initVendorLinkInputs();
+      loadGeminiApiKeyInput();
+      fetchRecentFirestoreReceipts();
     });
   </script>
 </body>
