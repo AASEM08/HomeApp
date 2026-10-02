@@ -1120,7 +1120,7 @@
 
     /* ========================================================
        AI RECEIPT PARSER (GEMINI 3.5 FLASH-LITE) & FIRESTORE
-       CRITICAL FIXES: Strict Tax/Naming Prompt, Pre-Firestore 
+       CRITICAL FIXES: Few-Shot Compliance Prompt, Pre-Firestore 
        Deduplication & True Programmatic Unit Price
        ======================================================== */
     async function processReceiptImage(event) {
@@ -1151,22 +1151,35 @@
         const base64Data = await fileToBase64(file);
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey.trim()}`;
         
-        // Strict Prompt (Commanding final_total_price only)
-        const promptText = `أنت محاسب بيانات. اقرأ الفاتورة واستخرج:
+        // Exact Few-Shot compliance prompt string
+        const promptText = `أنت محاسب بيانات صارم جداً. اقرأ الفاتورة بدقة.
+القاعدة الأهم: إياك أن تنسخ الاسم العشوائي من الفاتورة كما هو وتضعه في standard_name. يجب عليك استنتاج اسم موحد ونظيف تماماً بناءً على (الماركة + المنتج الأساسي + الحجم/الوزن).
+
+أمثلة إجبارية للتدريب (Few-Shot):
+
+إذا قرأت: 'صفاء مكة ابوص 40*330 مل' أو 'SAFA W 40X330ML' -> اكتب الموحد: 'ماء صفا 330 مل 40 عبوة'
+
+إذا قرأت: 'دجاج رضوى طازج 1000 جم' أو 'دجاج مبرد رضوى 1 كيلو' -> اكتب الموحد: 'دجاج رضوى 1000 جم'
+
+إذا قرأت: 'تي تي مشروب ايس تي تفاح' -> اكتب الموحد: 'ايس تي تفاح 330 مل'
+
+إذا قرأت: 'طحينة حلواني سائل ممتاز 500 جم' -> اكتب الموحد: 'طحينة حلواني 500 جم'
+
+استخرج البيانات التالية:
 
 اسم المتجر.
 
-المنتجات:
+المنتجات (لكل منتج):
 
-raw_name: اسم المنتج في الفاتورة.
+raw_name: الاسم كما هو في الفاتورة.
 
-standard_name: تطبيق هذه القاعدة بصرامة: [اسم الماركة] + [اسم المنتج الأساسي] + [الوزن/الحجم]. (مثال: 'دجاج رضوى 1000 جم'، 'ماء صفا 330 مل'). احذف تماماً الكلمات الوصفية مثل (طازج، مبرد، عرض، كرتون، حبة).
+standard_name: الاسم الموحد النظيف حسب الأمثلة والقاعدة.
 
 quantity: الكمية.
 
-final_total_price: استخرج السعر الإجمالي النهائي للمنتج (final_total_price). لا تقم أبداً باستخراج سعر الوحدة المفردة حتى لو كان مكتوباً أمامك.
+final_total_price: السعر الإجمالي النهائي للمنتج شامل الضريبة (لا تستخرج سعر الحبة المفردة أبداً).
 
-category: تصنيف المنتج. إذا كان خضار أو فواكه اكتب 'خضار وفواكه'.
+category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفواكه').
 أعد البيانات بصيغة JSON فقط: { "store_name": "", "items": [ { "raw_name": "", "standard_name": "", "quantity": 1, "final_total_price": 0.0, "category": "" } ] }`;
 
         const requestBody = {
@@ -1641,6 +1654,7 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
 
             let diffBadge = '';
             if (diff < 0) {
+              // Decreased (Green down-arrow)
               diffBadge = `
                 <span class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-num">
                   <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1650,6 +1664,7 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
                 </span>
               `;
             } else if (diff > 0) {
+              // Increased (Red up-arrow)
               diffBadge = `
                 <span class="inline-flex items-center gap-1 text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md font-num">
                   <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1659,6 +1674,7 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
                 </span>
               `;
             } else {
+              // Unchanged
               diffBadge = `
                 <span class="inline-flex items-center gap-1 text-[11px] font-black text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md font-num">
                   نفس السعر
