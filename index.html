@@ -232,7 +232,7 @@
             <h2 class="text-lg font-black text-navy leading-none font-display">المحاسب الذكي للفواتير</h2>
             <span class="text-xs bg-olive-soft text-olive px-2 py-0.5 rounded-md font-extrabold font-num">Gemini 3.5 Flash-Lite</span>
           </div>
-          <p class="text-xs text-gray-500 mt-1">قراءة وتحليل بنود الفواتير وحساب الأسعار شاملة الضريبة 15% وتوحيد المسميات</p>
+          <p class="text-xs text-gray-500 mt-1">قراءة وتحليل بنود الفواتير وحساب الأسعار شاملة الضريبة 15% واستخراج التاريخ المطبوع</p>
         </div>
 
         <!-- Hidden Native File Inputs -->
@@ -1119,9 +1119,56 @@
     }
 
     /* ========================================================
+       FIX 2: JAVASCRIPT TEXT NORMALIZATION HELPER
+       ======================================================== */
+    function cleanProductName(name) {
+      if (!name || typeof name !== 'string') return '';
+      let s = name.trim();
+
+      // 1. Remove Arabic diacritics (tashkeel)
+      s = s.replace(/[\u064B-\u0652\u0670]/g, '');
+
+      // 2. Normalize Arabic letters:
+      // convert 'أ', 'إ', 'آ' to 'ا'
+      s = s.replace(/[أإآ]/g, 'ا');
+      // convert 'ة' to 'ه'
+      s = s.replace(/ة/g, 'ه');
+      // convert 'ي' to 'ى' if at the end of word or string
+      s = s.replace(/ي(?=[\s\W]|$)/g, 'ى');
+
+      // 3. Remove punctuation / delimiters
+      s = s.replace(/[*+xX/\\()_#\-,]/g, ' ');
+
+      // 4. Normalized filler words & units to exclude
+      const stopwords = [
+        'طازج', 'طازجه', 'طازجة',
+        'مبرد', 'مبرده', 'مبردة',
+        'فاخر', 'فاخره', 'فاخرة',
+        'ممتاز', 'ممتازه', 'ممتازة',
+        'عروض', 'عرض',
+        'خاص', 'خاصه', 'خاصة',
+        'سائل', 'سائله', 'سائلة',
+        'جرام', 'غرام', 'جم',
+        'كيلو', 'كيلوجرام', 'كيلوغرام', 'كجم',
+        'مل', 'ملل', 'ملي', 'لتر',
+        'عبوه', 'عبوة',
+        'حبه', 'حبة', 'حبات',
+        'كرتون', 'كرتونه'
+      ].map(w => w.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ي(?=[\s\W]|$)/g, 'ى'));
+
+      // Filter words
+      const words = s.split(/\s+/);
+      const filtered = words.filter(w => {
+        const cleanW = w.trim();
+        return cleanW.length > 0 && !stopwords.includes(cleanW);
+      });
+
+      return filtered.join(' ').trim().toLowerCase();
+    }
+
+    /* ========================================================
        AI RECEIPT PARSER (GEMINI 3.5 FLASH-LITE) & FIRESTORE
-       CRITICAL FIXES: Few-Shot Compliance Prompt, Pre-Firestore 
-       Deduplication & True Programmatic Unit Price
+       FIX 1: Real Receipt Date & Strict Prompt
        ======================================================== */
     async function processReceiptImage(event) {
       const file = event.target.files[0];
@@ -1141,9 +1188,9 @@
       container.innerHTML = `
         <div class="flex flex-col items-center py-6">
           <div class="w-12 h-12 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3.5"></div>
-          <p class="text-sm font-black text-navy font-display">جارٍ قراءة الفاتورة وتوحيد أسماء المنتجات بدقة...</p>
+          <p class="text-sm font-black text-navy font-display">جارٍ قراءة الفاتورة وتاريخ الشراء بدقة...</p>
           <span class="text-xs text-gray-400 mt-1 font-num">${escapeHtml(file.name)}</span>
-          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse font-num">استخراج الأسعار الإجمالية النهائية وتطبيق الدمج والتدقيق</span>
+          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse font-num">استخراج تاريخ الفاتورة المطبوع والأسعار الإجمالية</span>
         </div>
       `;
 
@@ -1151,7 +1198,7 @@
         const base64Data = await fileToBase64(file);
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey.trim()}`;
         
-        // Exact Few-Shot compliance prompt string
+        // Exact Prompt String with Few-Shot and Printed Receipt Date extraction
         const promptText = `أنت محاسب بيانات صارم جداً. اقرأ الفاتورة بدقة.
 القاعدة الأهم: إياك أن تنسخ الاسم العشوائي من الفاتورة كما هو وتضعه في standard_name. يجب عليك استنتاج اسم موحد ونظيف تماماً بناءً على (الماركة + المنتج الأساسي + الحجم/الوزن).
 
@@ -1165,11 +1212,13 @@
 
 إذا قرأت: 'طحينة حلواني سائل ممتاز 500 جم' -> اكتب الموحد: 'طحينة حلواني 500 جم'
 
-استخرج البيانات التالية:
+استخرج البيانات:
 
-اسم المتجر.
+store_name: اسم المتجر.
 
-المنتجات (لكل منتج):
+receipt_date: تاريخ الفاتورة المطبوع بصيغة YYYY-MM-DD. إذا لم تجده، خمن التاريخ التقريبي.
+
+items: المنتجات (لكل منتج):
 
 raw_name: الاسم كما هو في الفاتورة.
 
@@ -1180,7 +1229,7 @@ quantity: الكمية.
 final_total_price: السعر الإجمالي النهائي للمنتج شامل الضريبة (لا تستخرج سعر الحبة المفردة أبداً).
 
 category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفواكه').
-أعد البيانات بصيغة JSON فقط: { "store_name": "", "items": [ { "raw_name": "", "standard_name": "", "quantity": 1, "final_total_price": 0.0, "category": "" } ] }`;
+أعد البيانات بصيغة JSON فقط: { "store_name": "", "receipt_date": "YYYY-MM-DD", "items": [ { "raw_name": "", "standard_name": "", "quantity": 1, "final_total_price": 0.0, "category": "" } ] }`;
 
         const requestBody = {
           contents: [
@@ -1221,10 +1270,15 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
 
         let detectedStore = "متجر عام";
         let rawItems = [];
+        let extractedReceiptDate = '';
 
         if (parsedResult && typeof parsedResult === 'object') {
           if (parsedResult.store_name) detectedStore = parsedResult.store_name.trim();
           else if (parsedResult.store) detectedStore = parsedResult.store.trim();
+
+          if (parsedResult.receipt_date) {
+            extractedReceiptDate = String(parsedResult.receipt_date).trim();
+          }
 
           if (Array.isArray(parsedResult.items)) {
             rawItems = parsedResult.items;
@@ -1236,6 +1290,11 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           if (rawItems[0]?.store_name || rawItems[0]?.store) {
             detectedStore = (rawItems[0].store_name || rawItems[0].store).trim();
           }
+        }
+
+        // Validate or fallback to ISO YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(extractedReceiptDate)) {
+          extractedReceiptDate = new Date().toISOString().split('T')[0];
         }
 
         if (!rawItems || rawItems.length === 0) {
@@ -1263,13 +1322,12 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
               category: cat
             };
           } else {
-            // Strict deduplication: sum quantity & final_total_price
             deduplicatedMap[stdName].quantity += qty;
             deduplicatedMap[stdName].final_total_price += finalTotal;
           }
         });
 
-        // Calculate unit_price = final_total_price / quantity programmatically
+        // Calculate true unit_price = final_total_price / quantity
         let totalSum = 0;
         const normalizedItems = Object.values(deduplicatedMap).map(item => {
           const unitPrice = item.quantity > 0 ? (item.final_total_price / item.quantity) : item.final_total_price;
@@ -1285,13 +1343,14 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           };
         });
 
-        // Save normalized and deduplicated data to Firestore
+        // Save to Firebase Firestore including the printed receipt_date
         let savedToFirestore = false;
         if (db) {
           try {
             await db.collection('receipts').add({
               store_name: detectedStore,
               store: detectedStore,
+              receipt_date: extractedReceiptDate,
               items: normalizedItems,
               total: parseFloat(totalSum.toFixed(2)),
               createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1305,7 +1364,7 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           }
         }
 
-        renderParsedReceiptUI(detectedStore, normalizedItems, totalSum, savedToFirestore);
+        renderParsedReceiptUI(detectedStore, extractedReceiptDate, normalizedItems, totalSum, savedToFirestore);
         showToast(savedToFirestore ? 'تم التحليل وحفظ الفاتورة بنجاح ✓' : 'تم التحليل بنجاح ✓');
 
       } catch (error) {
@@ -1325,7 +1384,7 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
       }
     }
 
-    function renderParsedReceiptUI(store, items, total, isSaved) {
+    function renderParsedReceiptUI(store, receiptDate, items, total, isSaved) {
       const container = document.getElementById('invoiceContainer');
       
       let rowsHtml = '';
@@ -1358,7 +1417,7 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           <div class="flex justify-between items-center pb-2 border-b border-gray-100">
             <div>
               <span class="text-sm font-black text-navy block font-display">${escapeHtml(store)}</span>
-              <span class="text-[10px] text-gray-400 font-num">إجمالي البنود المدمجة: ${items.length}</span>
+              <span class="text-[10px] text-gray-400 font-num">تاريخ الفاتورة: ${escapeHtml(receiptDate)} • ${items.length} أصناف</span>
             </div>
             <span class="text-xs font-black ${isSaved ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'} px-2.5 py-1 rounded-lg font-display">
               ${isSaved ? 'محفوظة بالسحاب ✓' : 'محلية'}
@@ -1415,13 +1474,18 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           const totalAmount = parseFloat(data.total || 0).toFixed(2);
           const items = data.items || [];
           
+          // Use printed receipt_date if present
           let dateStr = 'مؤخراً';
-          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+          if (data.receipt_date && /^\d{4}-\d{2}-\d{2}$/.test(data.receipt_date)) {
+            const parts = data.receipt_date.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric' });
+          } else if (data.createdAt && typeof data.createdAt.toDate === 'function') {
             const d = data.createdAt.toDate();
-            dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
+            dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric' });
           } else if (data.createdAt && data.createdAt.seconds) {
             const d = new Date(data.createdAt.seconds * 1000);
-            dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
+            dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric' });
           }
 
           const cardId = `receipt-details-${doc.id || idx}`;
@@ -1506,7 +1570,9 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
 
     /* ========================================================
        COMPARISON TAB LOGIC
-       RESTORE SINGLE ITEMS UI & RENDER TIMELINE COMPARISONS
+       FIX 1: Real Receipt Dates
+       FIX 2: cleanProductName Grouping
+       FIX 3: Accordion for Single Items
        ======================================================== */
     async function fetchAndRenderPriceComparisons() {
       const container = document.getElementById('compareItemsContainer');
@@ -1520,7 +1586,7 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center py-10 bg-white rounded-2xl border border-gray-100">
           <div class="w-7 h-7 border-3 border-olive border-t-transparent rounded-full animate-spin mb-2.5"></div>
-          <span class="text-xs text-gray-400 font-bold font-num">جارٍ استخراج ومقارنة السجل التاريخي للأسعار...</span>
+          <span class="text-xs text-gray-400 font-bold font-num">جارٍ استخراج وتوحيد السجل التاريخي للأسعار...</span>
         </div>
       `;
 
@@ -1548,10 +1614,16 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           const data = doc.data();
           const storeName = (data.store_name || data.store || 'متجر عام').trim();
 
+          // FIX 1: Prioritize printed receipt_date for timeline ordering
           let timestamp = 0;
           let dateDisplay = 'مؤخراً';
 
-          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+          if (data.receipt_date && /^\d{4}-\d{2}-\d{2}$/.test(data.receipt_date)) {
+            const parts = data.receipt_date.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            timestamp = d.getTime();
+            dateDisplay = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric' });
+          } else if (data.createdAt && typeof data.createdAt.toDate === 'function') {
             const d = data.createdAt.toDate();
             timestamp = d.getTime();
             dateDisplay = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -1565,18 +1637,21 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           items.forEach(it => {
             const cat = (it.category || '').trim();
             
-            // Exclude produce (خضار وفواكه) from price comparison
+            // Exclude produce (خضار وفواكه)
             if (cat.includes('خضار') || cat.includes('فواكه') || cat.includes('خضروات') || cat.includes('فاكهة') || cat.includes('فاكهه')) {
               return;
             }
 
-            const cleanStandard = (it.standard_name || it.name || it.raw_name || '').trim();
-            if (!cleanStandard) return;
+            const rawStandard = (it.standard_name || it.name || it.raw_name || '').trim();
+            if (!rawStandard) return;
 
-            const key = cleanStandard.toLowerCase();
-            if (!itemsMap[key]) {
-              itemsMap[key] = {
-                standard_name: cleanStandard,
+            // FIX 2: Group strictly using normalized cleanProductName key
+            const groupKey = cleanProductName(rawStandard);
+            if (!groupKey) return;
+
+            if (!itemsMap[groupKey]) {
+              itemsMap[groupKey] = {
+                standard_name: rawStandard, // Keep original standard name for clean display
                 category: cat || 'عام',
                 history: []
               };
@@ -1585,7 +1660,7 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
             const qty = parseInt(it.quantity) || 1;
             const unitPrice = parseFloat(it.unit_price) || (parseFloat(it.final_total_price || it.total_price) / qty) || 0;
 
-            itemsMap[key].history.push({
+            itemsMap[groupKey].history.push({
               unit_price: parseFloat(unitPrice.toFixed(2)),
               store_name: storeName,
               timestamp: timestamp,
@@ -1614,13 +1689,13 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           return;
         }
 
-        // Separate items into Compared (2+ purchases) and Single Purchases (1 purchase)
+        // Separate items: Compared (2+ purchases) and Single Purchases (1 purchase)
         const comparedItems = [];
         const singleItems = [];
 
         allKeys.forEach(key => {
           const item = itemsMap[key];
-          // Sort timeline newest first
+          // Sort timeline newest first by receipt date timestamp
           item.history.sort((a, b) => b.timestamp - a.timestamp);
 
           if (item.history.length >= 2) {
@@ -1630,7 +1705,7 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           }
         });
 
-        // Sort items by most recent purchase timestamp
+        // Sort items by most recent receipt date
         comparedItems.sort((a, b) => b.history[0].timestamp - a.history[0].timestamp);
         singleItems.sort((a, b) => b.history[0].timestamp - a.history[0].timestamp);
 
@@ -1654,7 +1729,6 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
 
             let diffBadge = '';
             if (diff < 0) {
-              // Decreased (Green down-arrow)
               diffBadge = `
                 <span class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-num">
                   <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1664,7 +1738,6 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
                 </span>
               `;
             } else if (diff > 0) {
-              // Increased (Red up-arrow)
               diffBadge = `
                 <span class="inline-flex items-center gap-1 text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md font-num">
                   <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1674,7 +1747,6 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
                 </span>
               `;
             } else {
-              // Unchanged
               diffBadge = `
                 <span class="inline-flex items-center gap-1 text-[11px] font-black text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md font-num">
                   نفس السعر
@@ -1754,36 +1826,53 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
           });
         }
 
-        // 2. Restore Single Items Section (Distinct "مشتريات مسجلة لمرة واحدة", No Arrows)
+        // 2. FIX 3: Accordion for Single Items (Wrapped cleanly, hidden by default)
         if (singleItems.length > 0) {
-          const singleSectionHeader = document.createElement('div');
-          singleSectionHeader.className = "flex items-center gap-1.5 px-1 pt-4 pb-1 text-xs font-bold text-gray-500 font-display";
-          singleSectionHeader.innerHTML = `
-            <span class="h-2 w-2 rounded-full bg-gray-300"></span>
-            <span>مشتريات مسجلة لمرة واحدة (${singleItems.length})</span>
-          `;
-          container.appendChild(singleSectionHeader);
-
+          let singleItemsHtml = '';
           singleItems.forEach(item => {
             const purchase = item.history[0];
-            const card = document.createElement('div');
-            card.className = "bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between";
-            card.innerHTML = `
-              <div class="flex-1 pr-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-sm text-appDark block truncate">${escapeHtml(item.standard_name)}</span>
-                  <span class="text-[10px] text-olive bg-olive-soft px-1.5 py-0.2 rounded font-bold flex-shrink-0">${escapeHtml(item.category)}</span>
+            singleItemsHtml += `
+              <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div class="flex-1 pr-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm text-appDark block truncate">${escapeHtml(item.standard_name)}</span>
+                    <span class="text-[10px] text-olive bg-olive-soft px-1.5 py-0.2 rounded font-bold flex-shrink-0">${escapeHtml(item.category)}</span>
+                  </div>
+                  <span class="text-[11px] text-gray-400 mt-0.5 block truncate font-num">
+                    ${escapeHtml(purchase.store_name)} • ${purchase.dateDisplay}
+                  </span>
                 </div>
-                <span class="text-[11px] text-gray-400 mt-0.5 block truncate font-num">
-                  ${escapeHtml(purchase.store_name)} • ${purchase.dateDisplay}
-                </span>
-              </div>
-              <div class="text-left flex-shrink-0 pr-3">
-                <span class="font-black text-navy text-sm font-num price-num">${purchase.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س</span></span>
+                <div class="text-left flex-shrink-0 pr-3">
+                  <span class="font-black text-navy text-sm font-num price-num">${purchase.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س</span></span>
+                </div>
               </div>
             `;
-            container.appendChild(card);
           });
+
+          const singleAccordion = document.createElement('div');
+          singleAccordion.className = "bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300 mt-2";
+          singleAccordion.innerHTML = `
+            <!-- Accordion Header with Count Badge & Down Arrow -->
+            <div class="p-3.5 flex items-center justify-between cursor-pointer select-none active:bg-gray-50/80 transition"
+                 onclick="toggleSingleItemsAccordion('single-items-content', 'single-items-arrow')">
+              <div class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+                <span class="text-xs font-bold text-gray-700 font-display">مشتريات مسجلة لمرة واحدة</span>
+                <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full font-num">${singleItems.length}</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-gray-400">
+                <svg id="single-items-arrow" class="w-4 h-4 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Accordion Content (Hidden by default) -->
+            <div id="single-items-content" class="hidden px-3.5 pb-3.5 pt-1 border-t border-gray-100 bg-gray-50/50 space-y-2">
+              ${singleItemsHtml}
+            </div>
+          `;
+          container.appendChild(singleAccordion);
         }
 
       } catch (err) {
@@ -1811,6 +1900,21 @@ category: التصنيف (إذا خضار/فواكه اكتب 'خضار وفوا
         arrow.classList.add('rotate-180');
       } else {
         card.classList.add('hidden');
+        arrow.classList.remove('rotate-180');
+      }
+    }
+
+    function toggleSingleItemsAccordion(contentId, arrowId) {
+      const content = document.getElementById(contentId);
+      const arrow = document.getElementById(arrowId);
+      if (!content || !arrow) return;
+
+      const isHidden = content.classList.contains('hidden');
+      if (isHidden) {
+        content.classList.remove('hidden');
+        arrow.classList.add('rotate-180');
+      } else {
+        content.classList.add('hidden');
         arrow.classList.remove('rotate-180');
       }
     }
