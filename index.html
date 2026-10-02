@@ -130,10 +130,11 @@
   </style>
 </head>
 
-<body class="flex justify-center items-center min-h-screen p-0 sm:p-4">
+<body class="flex justify-center items-center min-h-screen p-0 sm:p-4 bg-[#e2e8f0]">
 
-  <!-- Mobile Device Shell (Max-Width 400px) -->
-  <div class="w-full max-w-[400px] h-[100dvh] sm:h-[844px] bg-appBg text-appDark flex flex-col justify-between relative sm:rounded-[36px] shadow-2xl overflow-hidden border border-gray-200/70">
+  <!-- Mobile Device Shell (Max-Width 400px, Safe Area Aware, No Hardcoded 100dvh) -->
+  <div class="w-full max-w-[400px] min-h-screen sm:min-h-[844px] bg-appBg text-appDark flex flex-col justify-between relative sm:rounded-[36px] shadow-2xl overflow-hidden border border-gray-200/70"
+       style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
 
     <!-- Top Navigation Header -->
     <header class="bg-white/95 backdrop-blur-md px-5 pt-4 pb-3 border-b border-gray-100 flex-shrink-0 z-10">
@@ -160,7 +161,7 @@
     </header>
 
     <!-- Main Content Area (Scrollable) -->
-    <main class="flex-1 overflow-y-auto no-scrollbar px-4 py-3.5 pb-24">
+    <main class="flex-1 overflow-y-auto no-scrollbar px-4 py-3.5 pb-6">
 
       <!-- ================= 1. TAB: HOME (الرئيسية) ================= -->
       <section id="tab-home" class="space-y-5">
@@ -274,12 +275,12 @@
 
       </section>
 
-      <!-- ================= 3. TAB: COMPARE (مقارنة حقيقية من Firestore) ================= -->
+      <!-- ================= 3. TAB: COMPARE (مقارنة ذكية متقدمة من Firestore) ================= -->
       <section id="tab-compare" class="hidden space-y-4">
         <div class="flex items-center justify-between px-0.5">
           <div>
             <h2 class="text-lg font-black text-navy leading-none">مقارنة أسعار الأصناف</h2>
-            <p class="text-xs text-gray-500 mt-1">تتبع فروقات الأسعار بين مشترياتك السابقة الحقيقية</p>
+            <p class="text-xs text-gray-500 mt-1">تتبع فروقات الأسعار بين مشترياتك السابقة من الفواتير</p>
           </div>
           <button onclick="fetchAndRenderPriceComparisons()" title="تحديث المقارنة" class="w-8 h-8 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:text-navy transition active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,12 +413,12 @@
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٥. الشربتلي</label>
-              <input type="url" id="link-sharbatly" placeholder="https://..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-sharbatly" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-0.5">٦. يجبى</label>
-              <input type="url" id="link-ujba" placeholder="https://..." dir="ltr" class="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
+              <input type="url" id="link-ujba" placeholder="https://..." dir="ltr" class="w-full text-sm p-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-navy focus:outline-none transition">
             </div>
 
             <div>
@@ -454,8 +455,8 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar (4 Tabs) -->
-    <nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 px-3 py-2 flex justify-around items-center z-20">
+    <!-- Bottom Navigation Bar (4 Tabs, Safe Area Friendly) -->
+    <nav class="sticky bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 px-3 py-2 flex justify-around items-center z-20 flex-shrink-0">
       
       <!-- Tab 1: Home -->
       <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center gap-0.5 transition-all text-navy">
@@ -493,13 +494,14 @@
     </nav>
 
     <!-- ================= DYNAMIC TASK MODAL ================= -->
-    <div id="taskModal" class="hidden absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex flex-col justify-end">
+    <div id="taskModal" class="hidden fixed sm:absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex flex-col justify-end">
       
       <!-- Backdrop Click to Dismiss -->
       <div class="flex-1" onclick="closeTaskModal()"></div>
 
       <!-- Modal Bottom Sheet Body -->
-      <div class="bg-white rounded-t-[32px] p-5 max-h-[88%] flex flex-col shadow-2xl animate-slide-up border-t border-gray-100">
+      <div class="bg-white rounded-t-[32px] p-5 max-h-[88%] flex flex-col shadow-2xl animate-slide-up border-t border-gray-100"
+           style="padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));">
         
         <!-- Header -->
         <div class="flex justify-between items-start pb-3 border-b border-gray-100 flex-shrink-0">
@@ -1102,6 +1104,7 @@
 
     /* ========================================================
        AI RECEIPT PARSER (GEMINI 3.5 FLASH-LITE) & FIRESTORE
+       FIX 2: VAT Calculation & Standard Naming Prompt
        ======================================================== */
     async function processReceiptImage(event) {
       const file = event.target.files[0];
@@ -1123,9 +1126,9 @@
       container.innerHTML = `
         <div class="flex flex-col items-center py-6">
           <div class="w-12 h-12 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3.5"></div>
-          <p class="text-sm font-black text-navy">جارٍ تحليل الفاتورة بدقة بواسطة Gemini 3.5 Flash-Lite...</p>
+          <p class="text-sm font-black text-navy">جارٍ تحليل الفاتورة وحساب الضريبة بدقة...</p>
           <span class="text-xs text-gray-400 mt-1">${escapeHtml(file.name)}</span>
-          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse">يتم استخراج أسماء المنتجات والكميات وأسعار الوحدات</span>
+          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse">يتم استخراج المنتجات والأسعار شاملة الضريبة 15% وتوحيد الأوزان</span>
         </div>
       `;
 
@@ -1133,29 +1136,28 @@
         // 3. Convert Image to Base64
         const base64Data = await fileToBase64(file);
 
-        // 4. Gemini 3.5 Flash-Lite API Call with Enhanced Extraction Prompt
+        // 4. Gemini 3.5 Flash-Lite API Call with Fix 2 Exact Prompt
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey.trim()}`;
         
-        // Exact Prompt String specified in Update 1
-        const promptText = `أنت محاسب مالي ذكي. اقرأ هذه الفاتورة واستخرج البيانات بدقة:
+        // Exact Prompt String specified in Fix 2
+        const promptText = `أنت محاسب مالي ذكي. اقرأ الفاتورة واستخرج البيانات:
 
 اسم المتجر.
 
 المنتجات: لكل منتج استخرج:
 
-raw_name: اسم المنتج كما هو مكتوب في الفاتورة.
+raw_name: اسم المنتج في الفاتورة.
 
-standard_name: اسم موحد ونظيف للمنتج (مثلا 'صفاء مكة ابوص 40*330' اجعله 'ماء صفا 330 مل 40 عبوة').
+standard_name: اسم موحد جداً للمنتج. لتوحيد المقارنة: حول أي أوزان إلى جرام (مثلا 1 كيلو يصبح 1000 جم).
 
-quantity: الكمية (رقم صحيح). إذا لم تذكر افترض أنها 1.
+quantity: الكمية.
 
-unit_price: سعر الحبة الواحدة.
+unit_price: سعر الحبة الواحدة شاملاً لضريبة القيمة المضافة 15%. (ملاحظة هامة: إذا كانت الفاتورة تعرض السعر قبل الضريبة، يجب عليك حساب سعر الحبة النهائي عن طريق قسمة 'السعر الإجمالي للمنتج شامل الضريبة' على 'الكمية').
 
-total_price: السعر الإجمالي لهذا المنتج.
+total_price: السعر الإجمالي للمنتج.
 
-category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
-أعد البيانات بصيغة JSON فقط بهذا الهيكل:
-{ "store_name": "اسم المتجر", "items": [ { "raw_name": "", "standard_name": "", "quantity": 1, "unit_price": 0.0, "total_price": 0.0, "category": "" } ] }`;
+category: تصنيف المنتج. إذا كان المنتج من قسم الخضار والفواكه، اكتب التصنيف 'خضار وفواكه'.
+أعد البيانات بصيغة JSON فقط كالتالي: { "store_name": "", "items": [ ... ] }`;
 
         const requestBody = {
           contents: [
@@ -1218,7 +1220,7 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
           throw new Error('لم يتم التعرف على بنود واضحة داخل الفاتورة');
         }
 
-        // Standardize Items Array & Calculate Accurate Totals
+        // Standardize Items Array & Calculate Accurate Totals (with 15% VAT check)
         let totalSum = 0;
         const normalizedItems = rawItems.map(item => {
           const qty = parseInt(item.quantity) || 1;
@@ -1302,7 +1304,7 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
               </div>
               <div class="flex items-center gap-1.5 mt-0.5">
                 <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded-md font-bold">${escapeHtml(cat)}</span>
-                <span class="text-[10px] text-gray-400">سعر الحبة: ${unitPrice} ر.س</span>
+                <span class="text-[10px] text-gray-400">سعر الحبة شامل الضريبة: ${unitPrice} ر.س</span>
               </div>
             </div>
             <span class="font-black text-navy text-sm flex-shrink-0">${totalPrice} ر.س</span>
@@ -1373,8 +1375,11 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
           const items = data.items || [];
           
           let dateStr = 'مؤخراً';
-          if (data.createdAt && data.createdAt.toDate) {
+          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
             const d = data.createdAt.toDate();
+            dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
+          } else if (data.createdAt && data.createdAt.seconds) {
+            const d = new Date(data.createdAt.seconds * 1000);
             dateStr = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
           }
 
@@ -1462,6 +1467,7 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
 
     /* ========================================================
        DYNAMIC REAL PRICE COMPARISON (FIRESTORE)
+       FIX 3: Advanced Grouping, Veg/Fruit Exclusion, Single Purchases
        ======================================================== */
     async function fetchAndRenderPriceComparisons() {
       const container = document.getElementById('compareItemsContainer');
@@ -1497,7 +1503,7 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
           return;
         }
 
-        // Group items by normalized standard_name
+        // Group items strictly by standard_name, EXCLUDING produce (خضار / فواكه)
         const itemsMap = {};
 
         snapshot.forEach(doc => {
@@ -1507,7 +1513,7 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
           let timestamp = 0;
           let dateDisplay = 'مؤخراً';
 
-          if (data.createdAt && data.createdAt.toDate) {
+          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
             const d = data.createdAt.toDate();
             timestamp = d.getTime();
             dateDisplay = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
@@ -1519,6 +1525,13 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
 
           const items = data.items || [];
           items.forEach(it => {
+            const cat = (it.category || '').trim();
+            
+            // Fix 3 Rule: Exclude any item where category includes "خضار" or "فواكه"
+            if (cat.includes('خضار') || cat.includes('فواكه') || cat.includes('خضروات') || cat.includes('فاكهة') || cat.includes('فاكهه')) {
+              return;
+            }
+
             const cleanStandard = (it.standard_name || it.name || it.raw_name || '').trim();
             if (!cleanStandard) return;
 
@@ -1526,45 +1539,25 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
             if (!itemsMap[key]) {
               itemsMap[key] = {
                 standard_name: cleanStandard,
-                category: it.category || 'عام',
-                purchases: []
+                category: cat || 'عام',
+                history: []
               };
             }
 
             const qty = parseInt(it.quantity) || 1;
             const unitPrice = parseFloat(it.unit_price) || (parseFloat(it.total_price) / qty) || 0;
 
-            itemsMap[key].purchases.push({
+            itemsMap[key].history.push({
               unit_price: unitPrice,
-              store: storeName,
+              store_name: storeName,
               timestamp: timestamp,
               dateDisplay: dateDisplay
             });
           });
         });
 
-        // Filter items with at least 2 distinct purchases
-        const comparedItems = [];
-        Object.values(itemsMap).forEach(itemData => {
-          if (itemData.purchases.length >= 2) {
-            // Sort purchases by date: most recent first
-            itemData.purchases.sort((a, b) => b.timestamp - a.timestamp);
-            const latest = itemData.purchases[0];
-            const previous = itemData.purchases[1];
-
-            comparedItems.push({
-              standard_name: itemData.standard_name,
-              category: itemData.category,
-              latest: latest,
-              previous: previous,
-              diff: latest.unit_price - previous.unit_price,
-              latestTimestamp: latest.timestamp
-            });
-          }
-        });
-
-        // Display friendly placeholder if no comparisons exist
-        if (comparedItems.length === 0) {
+        const allKeys = Object.keys(itemsMap);
+        if (allKeys.length === 0) {
           container.innerHTML = `
             <div class="bg-white rounded-2xl border border-gray-100 p-8 text-center flex flex-col items-center justify-center">
               <div class="w-12 h-12 rounded-2xl bg-olive-soft text-olive flex items-center justify-center mb-3">
@@ -1576,89 +1569,148 @@ category: تصنيف المنتج (خضار، لحوم، منظفات، الخ).
                 لا توجد بيانات كافية للمقارنة حتى الآن. قم بتصوير المزيد من الفواتير!
               </p>
               <span class="text-[11px] text-gray-400 mt-2 bg-gray-50 px-3 py-1 rounded-full">
-                يلزم شراء نفس الصنف مرتين على الأقل لإجراء المقارنة
+                يتم استثناء الخضار والفواكه من مقارنة الأسعار
               </span>
             </div>
           `;
           return;
         }
 
-        // Sort items by latest purchase date
-        comparedItems.sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+        // Sort each group's purchase history by receipt date (newest first)
+        const comparedItems = [];
+        const singleItems = [];
+
+        allKeys.forEach(key => {
+          const item = itemsMap[key];
+          item.history.sort((a, b) => b.timestamp - a.timestamp);
+
+          if (item.history.length >= 2) {
+            comparedItems.push(item);
+          } else {
+            singleItems.push(item);
+          }
+        });
+
+        // Sort both groups by newest purchase
+        comparedItems.sort((a, b) => b.history[0].timestamp - a.history[0].timestamp);
+        singleItems.sort((a, b) => b.history[0].timestamp - a.history[0].timestamp);
 
         container.innerHTML = '';
-        comparedItems.forEach(item => {
-          const card = document.createElement('div');
-          card.className = "bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm space-y-2.5";
 
-          const diffAbs = Math.abs(item.diff).toFixed(2);
-          let diffBadge = '';
-
-          if (item.diff < 0) {
-            // Price decreased: Green down-arrow indicator
-            diffBadge = `
-              <span class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                </svg>
-                انخفض ${diffAbs} ر.س
-              </span>
-            `;
-          } else if (item.diff > 0) {
-            // Price increased: Red up-arrow indicator
-            diffBadge = `
-              <span class="inline-flex items-center gap-1 text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
-                <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                </svg>
-                ارتفع ${diffAbs} ر.س
-              </span>
-            `;
-          } else {
-            // Price unchanged
-            diffBadge = `
-              <span class="inline-flex items-center gap-1 text-[11px] font-black text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
-                نفس السعر
-              </span>
-            `;
-          }
-
-          card.innerHTML = `
-            <div class="flex justify-between items-start gap-2">
-              <div>
-                <span class="font-bold text-sm text-appDark block leading-snug">${escapeHtml(item.standard_name)}</span>
-                <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded font-bold inline-block mt-0.5">${escapeHtml(item.category)}</span>
-              </div>
-              <div>
-                ${diffBadge}
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 text-sm pt-1">
-              <!-- Recent Purchase Details -->
-              <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                <div class="flex justify-between items-center mb-1">
-                  <span class="text-[10px] text-gray-400 font-bold">آخر شراء</span>
-                  <span class="text-[10px] text-gray-400">${item.latest.dateDisplay}</span>
-                </div>
-                <span class="block text-xs font-bold text-navy truncate">${escapeHtml(item.latest.store)}</span>
-                <span class="font-black text-navy text-sm block mt-0.5">${item.latest.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س / حبة</span></span>
-              </div>
-
-              <!-- Previous Purchase Details -->
-              <div class="bg-gray-50/70 p-2.5 rounded-xl border border-gray-100">
-                <div class="flex justify-between items-center mb-1">
-                  <span class="text-[10px] text-gray-400 font-bold">الشراء السابق</span>
-                  <span class="text-[10px] text-gray-400">${item.previous.dateDisplay}</span>
-                </div>
-                <span class="block text-xs font-bold text-gray-600 truncate">${escapeHtml(item.previous.store)}</span>
-                <span class="font-black text-gray-600 text-sm block mt-0.5">${item.previous.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س / حبة</span></span>
-              </div>
-            </div>
+        // 1. Render Compared Items (2 or more purchases)
+        if (comparedItems.length > 0) {
+          const compSectionHeader = document.createElement('div');
+          compSectionHeader.className = "flex items-center gap-1.5 px-1 pt-1 pb-0.5 text-xs font-bold text-navy";
+          compSectionHeader.innerHTML = `
+            <span class="h-2 w-2 rounded-full bg-olive"></span>
+            <span>أصناف تم رصد تغير أسعارها (${comparedItems.length})</span>
           `;
+          container.appendChild(compSectionHeader);
 
-          container.appendChild(card);
-        });
+          comparedItems.forEach(item => {
+            const newest = item.history[0];
+            const previous = item.history[1];
+            const diff = newest.unit_price - previous.unit_price;
+            const diffAbs = Math.abs(diff).toFixed(2);
+
+            let diffBadge = '';
+            if (diff < 0) {
+              // Decreased (Green down-arrow)
+              diffBadge = `
+                <span class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  </svg>
+                  انخفض ${diffAbs} ر.س
+                </span>
+              `;
+            } else if (diff > 0) {
+              // Increased (Red up-arrow)
+              diffBadge = `
+                <span class="inline-flex items-center gap-1 text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
+                  <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                  </svg>
+                  ارتفع ${diffAbs} ر.س
+                </span>
+              `;
+            } else {
+              // Unchanged
+              diffBadge = `
+                <span class="inline-flex items-center gap-1 text-[11px] font-black text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
+                  نفس السعر
+                </span>
+              `;
+            }
+
+            const card = document.createElement('div');
+            card.className = "bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm space-y-2.5";
+            card.innerHTML = `
+              <div class="flex justify-between items-start gap-2">
+                <div>
+                  <span class="font-bold text-sm text-appDark block leading-snug">${escapeHtml(item.standard_name)}</span>
+                  <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded font-bold inline-block mt-0.5">${escapeHtml(item.category)}</span>
+                </div>
+                <div>
+                  ${diffBadge}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-sm pt-1">
+                <!-- Newest Purchase -->
+                <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] text-gray-400 font-bold">آخر شراء</span>
+                    <span class="text-[10px] text-gray-400">${newest.dateDisplay}</span>
+                  </div>
+                  <span class="block text-xs font-bold text-navy truncate">${escapeHtml(newest.store_name)}</span>
+                  <span class="font-black text-navy text-sm block mt-0.5">${newest.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س / حبة</span></span>
+                </div>
+
+                <!-- Previous Purchase -->
+                <div class="bg-gray-50/70 p-2.5 rounded-xl border border-gray-100">
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] text-gray-400 font-bold">الشراء السابق</span>
+                    <span class="text-[10px] text-gray-400">${previous.dateDisplay}</span>
+                  </div>
+                  <span class="block text-xs font-bold text-gray-600 truncate">${escapeHtml(previous.store_name)}</span>
+                  <span class="font-black text-gray-600 text-sm block mt-0.5">${previous.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س / حبة</span></span>
+                </div>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        }
+
+        // 2. Render Single Purchase Items (Compact Cards, No Arrows / Comparison Notes)
+        if (singleItems.length > 0) {
+          const singleSectionHeader = document.createElement('div');
+          singleSectionHeader.className = "flex items-center gap-1.5 px-1 pt-3 pb-0.5 text-xs font-bold text-gray-500";
+          singleSectionHeader.innerHTML = `
+            <span class="h-2 w-2 rounded-full bg-gray-300"></span>
+            <span>مشتريات مسجلة لمرة واحدة (${singleItems.length})</span>
+          `;
+          container.appendChild(singleSectionHeader);
+
+          singleItems.forEach(item => {
+            const purchase = item.history[0];
+            const card = document.createElement('div');
+            card.className = "bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between";
+            card.innerHTML = `
+              <div class="flex-1 pr-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm text-appDark block truncate">${escapeHtml(item.standard_name)}</span>
+                  <span class="text-[10px] text-olive bg-olive-soft px-1.5 py-0.2 rounded font-bold flex-shrink-0">${escapeHtml(item.category)}</span>
+                </div>
+                <span class="text-[11px] text-gray-400 mt-0.5 block truncate">${escapeHtml(purchase.store_name)} • ${purchase.dateDisplay}</span>
+              </div>
+              <div class="text-left flex-shrink-0">
+                <span class="font-black text-navy text-sm">${purchase.unit_price.toFixed(2)} ر.س</span>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        }
 
       } catch (err) {
         console.error("Error fetching comparison data from Firestore:", err);
