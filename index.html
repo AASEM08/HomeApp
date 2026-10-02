@@ -298,12 +298,12 @@
 
       </section>
 
-      <!-- ================= 3. TAB: COMPARE (مقارنة الأسعار التاريخية) ================= -->
+      <!-- ================= 3. TAB: COMPARE (مقارنة الأسعار) ================= -->
       <section id="tab-compare" class="hidden space-y-4">
         <div class="flex items-center justify-between px-0.5">
           <div>
             <h2 class="text-lg font-black text-navy leading-none font-display">مقارنة أسعار الأصناف</h2>
-            <p class="text-xs text-gray-500 mt-1">تتبع التغيرات التاريخية للأسعار (للأصناف المشتراة أكثر من مرة)</p>
+            <p class="text-xs text-gray-500 mt-1">تتبع التغيرات التاريخية للأسعار لجميع مشترياتك</p>
           </div>
           <button onclick="fetchAndRenderPriceComparisons()" title="تحديث المقارنة" class="w-8 h-8 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-500 hover:text-navy transition active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1120,8 +1120,8 @@
 
     /* ========================================================
        AI RECEIPT PARSER (GEMINI 3.5 FLASH-LITE) & FIRESTORE
-       REQUIREMENT 2: Strict AI Prompt (Fixing Taxes & Naming)
-       REQUIREMENT 3: Deduplication & True Unit Price Math
+       CRITICAL FIXES: Strict Tax/Naming Prompt, Pre-Firestore 
+       Deduplication & True Programmatic Unit Price
        ======================================================== */
     async function processReceiptImage(event) {
       const file = event.target.files[0];
@@ -1143,7 +1143,7 @@
           <div class="w-12 h-12 border-4 border-olive border-t-transparent rounded-full animate-spin mb-3.5"></div>
           <p class="text-sm font-black text-navy font-display">جارٍ قراءة الفاتورة وتوحيد أسماء المنتجات بدقة...</p>
           <span class="text-xs text-gray-400 mt-1 font-num">${escapeHtml(file.name)}</span>
-          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse font-num">استخراج الأسعار النهائية وإزالة الكلمات الوصفية</span>
+          <span class="text-[11px] text-olive bg-olive-soft px-3 py-1 rounded-full mt-2 font-bold animate-pulse font-num">استخراج الأسعار الإجمالية النهائية وتطبيق الدمج والتدقيق</span>
         </div>
       `;
 
@@ -1151,7 +1151,7 @@
         const base64Data = await fileToBase64(file);
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey.trim()}`;
         
-        // Exact Prompt String specified in Requirement 2
+        // Strict Prompt (Commanding final_total_price only)
         const promptText = `أنت محاسب بيانات. اقرأ الفاتورة واستخرج:
 
 اسم المتجر.
@@ -1164,7 +1164,7 @@ standard_name: تطبيق هذه القاعدة بصرامة: [اسم المار
 
 quantity: الكمية.
 
-final_total_price: السعر الإجمالي النهائي لهذا المنتج (شاملاً للضريبة). لا تستخرج سعر الحبة المفردة أبداً.
+final_total_price: استخرج السعر الإجمالي النهائي للمنتج (final_total_price). لا تقم أبداً باستخراج سعر الوحدة المفردة حتى لو كان مكتوباً أمامك.
 
 category: تصنيف المنتج. إذا كان خضار أو فواكه اكتب 'خضار وفواكه'.
 أعد البيانات بصيغة JSON فقط: { "store_name": "", "items": [ { "raw_name": "", "standard_name": "", "quantity": 1, "final_total_price": 0.0, "category": "" } ] }`;
@@ -1230,7 +1230,7 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
         }
 
         /* --------------------------------------------------------
-           REQUIREMENT 3: Pre-processing (Deduplication & Unit Price)
+           STRICT PRE-FIRESTORE DEDUPLICATION & UNIT PRICE CALCULATION
            -------------------------------------------------------- */
         const deduplicatedMap = {};
         
@@ -1250,16 +1250,16 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
               category: cat
             };
           } else {
-            // Deduplicate: sum quantity & final_total_price
+            // Strict deduplication: sum quantity & final_total_price
             deduplicatedMap[stdName].quantity += qty;
             deduplicatedMap[stdName].final_total_price += finalTotal;
           }
         });
 
-        // Compute true unit_price = final_total_price / quantity
+        // Calculate unit_price = final_total_price / quantity programmatically
         let totalSum = 0;
         const normalizedItems = Object.values(deduplicatedMap).map(item => {
-          const trueUnitPrice = item.quantity > 0 ? (item.final_total_price / item.quantity) : item.final_total_price;
+          const unitPrice = item.quantity > 0 ? (item.final_total_price / item.quantity) : item.final_total_price;
           totalSum += item.final_total_price;
 
           return {
@@ -1267,12 +1267,12 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
             standard_name: item.standard_name,
             quantity: item.quantity,
             final_total_price: parseFloat(item.final_total_price.toFixed(2)),
-            unit_price: parseFloat(trueUnitPrice.toFixed(2)),
+            unit_price: parseFloat(unitPrice.toFixed(2)),
             category: item.category
           };
         });
 
-        // Save to Firebase Firestore
+        // Save normalized and deduplicated data to Firestore
         let savedToFirestore = false;
         if (db) {
           try {
@@ -1332,7 +1332,7 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
               </div>
               <div class="flex items-center gap-1.5 mt-0.5">
                 <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded-md font-bold">${escapeHtml(cat)}</span>
-                <span class="text-[10px] text-gray-400 font-num">سعر الوحدة الصافي: ${unitPrice} ر.س</span>
+                <span class="text-[10px] text-gray-400 font-num">سعر الوحدة: ${unitPrice} ر.س</span>
               </div>
             </div>
             <span class="font-black text-navy text-sm flex-shrink-0 font-num price-num">${finalPrice} ر.س</span>
@@ -1345,7 +1345,7 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
           <div class="flex justify-between items-center pb-2 border-b border-gray-100">
             <div>
               <span class="text-sm font-black text-navy block font-display">${escapeHtml(store)}</span>
-              <span class="text-[10px] text-gray-400 font-num">إجمالي البنود المستخرجة: ${items.length}</span>
+              <span class="text-[10px] text-gray-400 font-num">إجمالي البنود المدمجة: ${items.length}</span>
             </div>
             <span class="text-xs font-black ${isSaved ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'} px-2.5 py-1 rounded-lg font-display">
               ${isSaved ? 'محفوظة بالسحاب ✓' : 'محلية'}
@@ -1492,7 +1492,8 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
     }
 
     /* ========================================================
-       REQUIREMENT 4: The Timeline Comparison UI
+       COMPARISON TAB LOGIC
+       RESTORE SINGLE ITEMS UI & RENDER TIMELINE COMPARISONS
        ======================================================== */
     async function fetchAndRenderPriceComparisons() {
       const container = document.getElementById('compareItemsContainer');
@@ -1551,7 +1552,7 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
           items.forEach(it => {
             const cat = (it.category || '').trim();
             
-            // Exclude produce
+            // Exclude produce (خضار وفواكه) from price comparison
             if (cat.includes('خضار') || cat.includes('فواكه') || cat.includes('خضروات') || cat.includes('فاكهة') || cat.includes('فاكهه')) {
               return;
             }
@@ -1580,19 +1581,8 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
           });
         });
 
-        // Filter out items purchased only ONCE
-        const comparedItems = [];
-        Object.keys(itemsMap).forEach(key => {
-          const item = itemsMap[key];
-          // Sort timeline newest first
-          item.history.sort((a, b) => b.timestamp - a.timestamp);
-
-          if (item.history.length >= 2) {
-            comparedItems.push(item);
-          }
-        });
-
-        if (comparedItems.length === 0) {
+        const allKeys = Object.keys(itemsMap);
+        if (allKeys.length === 0) {
           container.innerHTML = `
             <div class="bg-white rounded-2xl border border-gray-100 p-8 text-center flex flex-col items-center justify-center">
               <div class="w-12 h-12 rounded-2xl bg-olive-soft text-olive flex items-center justify-center mb-3">
@@ -1604,128 +1594,181 @@ category: تصنيف المنتج. إذا كان خضار أو فواكه اكت
                 لا توجد بيانات كافية للمقارنة حتى الآن. قم بتصوير المزيد من الفواتير!
               </p>
               <span class="text-[11px] text-gray-400 mt-2 bg-gray-50 px-3 py-1 rounded-full font-num">
-                يظهر هنا فقط الأصناف المشتراة مرتين فأكثر (باستثناء الخضار والفواكه)
+                يتم استثناء الخضار والفواكه من مقارنة الأسعار
               </span>
             </div>
           `;
           return;
         }
 
+        // Separate items into Compared (2+ purchases) and Single Purchases (1 purchase)
+        const comparedItems = [];
+        const singleItems = [];
+
+        allKeys.forEach(key => {
+          const item = itemsMap[key];
+          // Sort timeline newest first
+          item.history.sort((a, b) => b.timestamp - a.timestamp);
+
+          if (item.history.length >= 2) {
+            comparedItems.push(item);
+          } else if (item.history.length === 1) {
+            singleItems.push(item);
+          }
+        });
+
         // Sort items by most recent purchase timestamp
         comparedItems.sort((a, b) => b.history[0].timestamp - a.history[0].timestamp);
+        singleItems.sort((a, b) => b.history[0].timestamp - a.history[0].timestamp);
 
         container.innerHTML = '';
 
-        comparedItems.forEach((item, index) => {
-          const newest = item.history[0];
-          const previous = item.history[1];
-          const diff = newest.unit_price - previous.unit_price;
-          const diffAbs = Math.abs(diff).toFixed(2);
-
-          let diffBadge = '';
-          if (diff < 0) {
-            diffBadge = `
-              <span class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-num">
-                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                </svg>
-                انخفض ${diffAbs} ر.س
-              </span>
-            `;
-          } else if (diff > 0) {
-            diffBadge = `
-              <span class="inline-flex items-center gap-1 text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md font-num">
-                <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                </svg>
-                ارتفع ${diffAbs} ر.س
-              </span>
-            `;
-          } else {
-            diffBadge = `
-              <span class="inline-flex items-center gap-1 text-[11px] font-black text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md font-num">
-                نفس السعر
-              </span>
-            `;
-          }
-
-          const cardId = `timeline-card-${index}`;
-          const arrowId = `timeline-arrow-${index}`;
-
-          // Build Historical Timeline rows
-          let timelineRowsHtml = '';
-          item.history.forEach((rec, hIdx) => {
-            const isLatest = hIdx === 0;
-            timelineRowsHtml += `
-              <div class="relative flex items-start gap-3 pb-3 last:pb-0">
-                <!-- Timeline Line -->
-                ${hIdx !== item.history.length - 1 ? '<div class="absolute right-[7px] top-[14px] bottom-0 w-[2px] bg-gray-200"></div>' : ''}
-                
-                <!-- Dot -->
-                <div class="w-3.5 h-3.5 rounded-full ${isLatest ? 'bg-olive ring-4 ring-olive/20' : 'bg-gray-300'} flex-shrink-0 mt-1 z-10"></div>
-                
-                <!-- Content -->
-                <div class="flex-1 bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between text-xs">
-                  <div>
-                    <div class="flex items-center gap-1.5">
-                      <span class="font-bold text-navy">${escapeHtml(rec.store_name)}</span>
-                      ${isLatest ? '<span class="text-[9px] font-bold text-olive bg-olive-soft px-1.5 py-0.2 rounded font-num">الأحدث</span>' : ''}
-                    </div>
-                    <span class="text-[10px] text-gray-400 font-num date-num">${rec.dateDisplay}</span>
-                  </div>
-                  <div class="text-left font-num price-num font-black text-navy text-sm">
-                    ${rec.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س</span>
-                  </div>
-                </div>
-              </div>
-            `;
-          });
-
-          const card = document.createElement('div');
-          card.className = "bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300";
-
-          card.innerHTML = `
-            <!-- Card Header (Always Visible, Clickable) -->
-            <div class="p-3.5 cursor-pointer select-none active:bg-gray-50/70 transition" onclick="toggleTimelineAccordion('${cardId}', '${arrowId}')">
-              <div class="flex justify-between items-start gap-2">
-                <div class="flex-1">
-                  <h3 class="font-bold text-sm text-appDark leading-snug">${escapeHtml(item.standard_name)}</h3>
-                  <div class="flex items-center gap-2 mt-1">
-                    <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded font-bold">${escapeHtml(item.category)}</span>
-                    <span class="text-[10px] text-gray-400 font-num">${item.history.length} مرات شراء مسجلة</span>
-                  </div>
-                </div>
-
-                <div class="text-left flex flex-col items-end">
-                  <div class="flex items-center gap-1.5">
-                    <span class="font-black text-navy text-base font-num price-num">${newest.unit_price.toFixed(2)} <span class="text-xs font-normal">ر.س</span></span>
-                    <svg id="${arrowId}" class="w-4 h-4 text-gray-400 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                  </div>
-                  <div class="mt-1">
-                    ${diffBadge}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Timeline Accordion (Hidden by default, smooth toggle) -->
-            <div id="${cardId}" class="hidden px-4 pb-3.5 pt-2 border-t border-gray-100 bg-gray-50/60 transition-all duration-300">
-              <div class="text-[11px] font-bold text-gray-500 mb-2.5 font-display flex items-center gap-1">
-                <svg class="w-3.5 h-3.5 text-olive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                سجل الأسعار التاريخي لهذا المنتج
-              </div>
-              <div class="relative pl-1">
-                ${timelineRowsHtml}
-              </div>
-            </div>
+        // 1. Render Compared Items Section (Accordion Timeline + Price Change Badges)
+        if (comparedItems.length > 0) {
+          const compSectionHeader = document.createElement('div');
+          compSectionHeader.className = "flex items-center gap-1.5 px-1 pt-1 pb-0.5 text-xs font-bold text-navy font-display";
+          compSectionHeader.innerHTML = `
+            <span class="h-2 w-2 rounded-full bg-olive"></span>
+            <span>أصناف تم رصد تغير أسعارها (${comparedItems.length})</span>
           `;
+          container.appendChild(compSectionHeader);
 
-          container.appendChild(card);
-        });
+          comparedItems.forEach((item, index) => {
+            const newest = item.history[0];
+            const previous = item.history[1];
+            const diff = newest.unit_price - previous.unit_price;
+            const diffAbs = Math.abs(diff).toFixed(2);
+
+            let diffBadge = '';
+            if (diff < 0) {
+              diffBadge = `
+                <span class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-num">
+                  <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  </svg>
+                  انخفض ${diffAbs} ر.س
+                </span>
+              `;
+            } else if (diff > 0) {
+              diffBadge = `
+                <span class="inline-flex items-center gap-1 text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md font-num">
+                  <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                  </svg>
+                  ارتفع ${diffAbs} ر.س
+                </span>
+              `;
+            } else {
+              diffBadge = `
+                <span class="inline-flex items-center gap-1 text-[11px] font-black text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md font-num">
+                  نفس السعر
+                </span>
+              `;
+            }
+
+            const cardId = `timeline-card-${index}`;
+            const arrowId = `timeline-arrow-${index}`;
+
+            // Build Timeline History Rows
+            let timelineRowsHtml = '';
+            item.history.forEach((rec, hIdx) => {
+              const isLatest = hIdx === 0;
+              timelineRowsHtml += `
+                <div class="relative flex items-start gap-3 pb-3 last:pb-0">
+                  ${hIdx !== item.history.length - 1 ? '<div class="absolute right-[7px] top-[14px] bottom-0 w-[2px] bg-gray-200"></div>' : ''}
+                  <div class="w-3.5 h-3.5 rounded-full ${isLatest ? 'bg-olive ring-4 ring-olive/20' : 'bg-gray-300'} flex-shrink-0 mt-1 z-10"></div>
+                  <div class="flex-1 bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between text-xs">
+                    <div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-bold text-navy">${escapeHtml(rec.store_name)}</span>
+                        ${isLatest ? '<span class="text-[9px] font-bold text-olive bg-olive-soft px-1.5 py-0.2 rounded font-num">الأحدث</span>' : ''}
+                      </div>
+                      <span class="text-[10px] text-gray-400 font-num date-num">${rec.dateDisplay}</span>
+                    </div>
+                    <div class="text-left font-num price-num font-black text-navy text-sm">
+                      ${rec.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س</span>
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300";
+
+            card.innerHTML = `
+              <div class="p-3.5 cursor-pointer select-none active:bg-gray-50/70 transition" onclick="toggleTimelineAccordion('${cardId}', '${arrowId}')">
+                <div class="flex justify-between items-start gap-2">
+                  <div class="flex-1">
+                    <h3 class="font-bold text-sm text-appDark leading-snug">${escapeHtml(item.standard_name)}</h3>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-[10px] text-olive bg-olive-soft px-2 py-0.5 rounded font-bold">${escapeHtml(item.category)}</span>
+                      <span class="text-[10px] text-gray-400 font-num">${item.history.length} مرات شراء مسجلة</span>
+                    </div>
+                  </div>
+
+                  <div class="text-left flex flex-col items-end">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-black text-navy text-base font-num price-num">${newest.unit_price.toFixed(2)} <span class="text-xs font-normal">ر.س</span></span>
+                      <svg id="${arrowId}" class="w-4 h-4 text-gray-400 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </div>
+                    <div class="mt-1">
+                      ${diffBadge}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="${cardId}" class="hidden px-4 pb-3.5 pt-2 border-t border-gray-100 bg-gray-50/60 transition-all duration-300">
+                <div class="text-[11px] font-bold text-gray-500 mb-2.5 font-display flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-olive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  سجل الأسعار التاريخي لهذا المنتج
+                </div>
+                <div class="relative pl-1">
+                  ${timelineRowsHtml}
+                </div>
+              </div>
+            `;
+
+            container.appendChild(card);
+          });
+        }
+
+        // 2. Restore Single Items Section (Distinct "مشتريات مسجلة لمرة واحدة", No Arrows)
+        if (singleItems.length > 0) {
+          const singleSectionHeader = document.createElement('div');
+          singleSectionHeader.className = "flex items-center gap-1.5 px-1 pt-4 pb-1 text-xs font-bold text-gray-500 font-display";
+          singleSectionHeader.innerHTML = `
+            <span class="h-2 w-2 rounded-full bg-gray-300"></span>
+            <span>مشتريات مسجلة لمرة واحدة (${singleItems.length})</span>
+          `;
+          container.appendChild(singleSectionHeader);
+
+          singleItems.forEach(item => {
+            const purchase = item.history[0];
+            const card = document.createElement('div');
+            card.className = "bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between";
+            card.innerHTML = `
+              <div class="flex-1 pr-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm text-appDark block truncate">${escapeHtml(item.standard_name)}</span>
+                  <span class="text-[10px] text-olive bg-olive-soft px-1.5 py-0.2 rounded font-bold flex-shrink-0">${escapeHtml(item.category)}</span>
+                </div>
+                <span class="text-[11px] text-gray-400 mt-0.5 block truncate font-num">
+                  ${escapeHtml(purchase.store_name)} • ${purchase.dateDisplay}
+                </span>
+              </div>
+              <div class="text-left flex-shrink-0 pr-3">
+                <span class="font-black text-navy text-sm font-num price-num">${purchase.unit_price.toFixed(2)} <span class="text-[10px] font-normal">ر.س</span></span>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        }
 
       } catch (err) {
         console.error("Error fetching comparison timeline:", err);
